@@ -88,39 +88,27 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsLoading(true);
 
-      // Delete existing data first
-      console.log('Limpando dados existentes...');
-      const { error: deleteError } = await supabase
-        .from('monthly_sales')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000');
-      
-      if (deleteError) {
-        console.error('Erro ao limpar dados:', deleteError);
-        throw new Error('Erro ao limpar dados antigos');
-      }
-
-      // Insert new data in batches
-      console.log(`Inserindo ${sales.length} registros em lotes...`);
+      // Upsert data in batches to avoid duplicates
+      console.log(`Importando ${sales.length} registros em lotes...`);
       const batchSize = 1000;
       for (let i = 0; i < sales.length; i += batchSize) {
         const batch = sales.slice(i, i + batchSize);
-        console.log(`Inserindo lote ${Math.floor(i/batchSize) + 1} de ${Math.ceil(sales.length/batchSize)}`);
+        console.log(`Processando lote ${Math.floor(i/batchSize) + 1} de ${Math.ceil(sales.length/batchSize)}`);
         
         const { error } = await supabase
           .from('monthly_sales')
-          .insert(batch);
+          .upsert(batch, {
+            onConflict: 'ano,mes,sku,local',
+            ignoreDuplicates: false
+          });
 
         if (error) {
           if (error.code === '42501') {
             toast.error('Você precisa de permissões de administrador para importar dados. Acesse /admin-setup');
             throw error;
           }
-          if (error.code === '23505') {
-            toast.error('Dados duplicados detectados. Tente limpar o banco antes de importar.');
-            throw error;
-          }
           console.error('Erro ao inserir lote:', error);
+          toast.error(`Erro ao processar lote ${Math.floor(i/batchSize) + 1}`);
           throw error;
         }
       }
