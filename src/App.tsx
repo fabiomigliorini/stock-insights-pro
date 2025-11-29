@@ -11,6 +11,7 @@ import Import from "./pages/Import";
 import Predicoes from "./pages/Predicoes";
 import Filiais from "./pages/Filiais";
 import Classes from "./pages/Classes";
+import Transferencias from "./pages/Transferencias";
 import TestSheetNames from "./pages/TestSheetNames";
 import Auth from "./pages/Auth";
 import AdminSetup from "./pages/AdminSetup";
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute><Import /></ProtectedRoute>} />
               <Route path="/predicoes" element={<ProtectedRoute><Predicoes /></ProtectedRoute>} />
+              <Route path="/transferencias" element={<ProtectedRoute><Transferencias /></ProtectedRoute>} />
               <Route path="/filiais" element={<ProtectedRoute><Filiais /></ProtectedRoute>} />
               <Route path="/classes" element={<ProtectedRoute><Classes /></ProtectedRoute>} />
               <Route path="/test-sheets" element={<ProtectedRoute><TestSheetNames /></ProtectedRoute>} />

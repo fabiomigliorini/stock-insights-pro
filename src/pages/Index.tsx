@@ -2,8 +2,6 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { KPICard } from "@/components/KPICard";
 import { StockChart } from "@/components/StockChart";
 import { BranchesOverview } from "@/components/BranchesOverview";
-import { TransferSuggestions } from "@/components/TransferSuggestions";
-import { ProductsTable } from "@/components/ProductsTable";
 import { Package, TrendingDown, DollarSign, AlertTriangle } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { useAutoLoad } from "@/hooks/useAutoLoad";
@@ -71,10 +69,6 @@ const Index = () => {
           <StockChart />
           <BranchesOverview />
         </div>
-
-        <TransferSuggestions />
-
-        <ProductsTable />
       </div>
     </DashboardLayout>
   );
