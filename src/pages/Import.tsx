@@ -1,11 +1,12 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { HistoricalExcelUpload } from "@/components/HistoricalExcelUpload";
 import { AutoImportButton } from "@/components/AutoImportButton";
+import { ClearDataButton } from "@/components/ClearDataButton";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Upload, AlertCircle } from "lucide-react";
+import { Upload, AlertCircle, Info } from "lucide-react";
 import { toast } from "sonner";
 import { MonthlySale } from "@/lib/importHistoricalData";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -35,13 +36,16 @@ const Import = () => {
           </p>
         </div>
 
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            O sistema foi atualizado para trabalhar com dados históricos mensais (2023-2025).
-            Use o botão abaixo para carregar os dados.
-          </AlertDescription>
-        </Alert>
+        <div className="flex items-center justify-between">
+          <Alert className="flex-1 mr-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              O sistema trabalha com dados históricos mensais (2023-2025).
+            </AlertDescription>
+          </Alert>
+          
+          <ClearDataButton />
+        </div>
 
         <Tabs defaultValue="upload" className="w-full">
           <TabsList className="grid w-full max-w-md">
