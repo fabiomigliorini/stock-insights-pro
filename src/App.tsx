@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Import from "./pages/Import";
 import Classes from "./pages/Classes";
 import Transferencias from "./pages/Transferencias";
+import Realocacao from "./pages/Realocacao";
 import Compras from "./pages/Compras";
 import TestSheetNames from "./pages/TestSheetNames";
 import Auth from "./pages/Auth";
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/" element={<ProtectedRoute><Classes /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute><Import /></ProtectedRoute>} />
               <Route path="/transferencias" element={<ProtectedRoute><Transferencias /></ProtectedRoute>} />
+              <Route path="/realocacao" element={<ProtectedRoute><Realocacao /></ProtectedRoute>} />
               <Route path="/compras" element={<ProtectedRoute><Compras /></ProtectedRoute>} />
               <Route path="/test-sheets" element={<ProtectedRoute><TestSheetNames /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
