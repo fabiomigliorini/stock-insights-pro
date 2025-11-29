@@ -40,6 +40,17 @@ Acesse `http://localhost:8080`
 - *Análise de Demanda* - Analise geral de demanda
 - *Gestão de Filiais* - Estatísticas por localização
 
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── components/     # Componentes React reutilizáveis
+├── pages/          # Páginas/rotas da aplicação
+├── contexts/       # Estado global (Auth, Data)
+├── lib/            # Utilitários e lógica de negócio
+├── hooks/          # Hooks customizados
+└── integrations/   # Integrações externas (Supabase)
+```
 
 ## 🔧 Decisões Técnicas
 
