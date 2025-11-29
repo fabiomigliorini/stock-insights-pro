@@ -493,6 +493,7 @@ export default function Classes() {
                     <table className="w-full text-sm">
                       <thead className="sticky top-0 bg-card border-b">
                         <tr className="text-left">
+                          <th className="p-2 font-semibold text-center">Análise</th>
                           <th className="p-2 font-semibold">SKU</th>
                           <th className="p-2 font-semibold">Produto</th>
                           <th className="p-2 font-semibold">Família</th>
@@ -502,12 +503,23 @@ export default function Classes() {
                           <th className="p-2 font-semibold text-right">Estoque</th>
                           <th className="p-2 font-semibold text-right">Demanda</th>
                           <th className="p-2 font-semibold">Volatilidade</th>
-                          <th className="p-2 font-semibold text-center">Análise</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredProducts.map((product) => (
                           <tr key={product.id} className="border-b hover:bg-accent/50">
+                            <td className="p-2 text-center">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedProduct(product);
+                                  setAnalysisOpen(true);
+                                }}
+                              >
+                                <BarChart3 className="h-4 w-4" />
+                              </Button>
+                            </td>
                             <td className="p-2 font-mono text-xs">{product.sku}</td>
                             <td className="p-2">{product.name}</td>
                             <td className="p-2 text-muted-foreground">{product.familia || "-"}</td>
@@ -527,18 +539,6 @@ export default function Classes() {
                               >
                                 {product.volatilidade || "Baixa"}
                               </Badge>
-                            </td>
-                            <td className="p-2 text-center">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  setSelectedProduct(product);
-                                  setAnalysisOpen(true);
-                                }}
-                              >
-                                <BarChart3 className="h-4 w-4" />
-                              </Button>
                             </td>
                           </tr>
                         ))}
