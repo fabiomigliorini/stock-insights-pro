@@ -8,9 +8,9 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: "Overview", icon: LayoutDashboard, href: "/", current: true },
-  { name: "Produtos", icon: Package, href: "#", current: false },
-  { name: "Predições", icon: TrendingUp, href: "#", current: false },
-  { name: "Filiais", icon: Building2, href: "#", current: false },
+  { name: "Produtos", icon: Package, href: "/produtos", current: false },
+  { name: "Predições", icon: TrendingUp, href: "/predicoes", current: false },
+  { name: "Filiais", icon: Building2, href: "/filiais", current: false },
 ];
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
@@ -23,7 +23,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="p-6 border-b border-sidebar-border">
           <h1 className="text-xl font-bold text-sidebar-foreground flex items-center gap-2">
             <Package className="h-6 w-6 text-sidebar-primary" />
-            StockFlow
+            Giro Certo
           </h1>
         </div>
         
