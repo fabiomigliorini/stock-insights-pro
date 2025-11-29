@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, ArrowRight } from "lucide-react";
+import { Printer } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useAutoLoad } from "@/hooks/useAutoLoad";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,6 @@ const Transferencias = () => {
   const [selectedFamilia, setSelectedFamilia] = useState<string>("all");
   const [selectedTamanho, setSelectedTamanho] = useState<string>("all");
   const [selectedCor, setSelectedCor] = useState<string>("all");
-  const [selectedOrigem, setSelectedOrigem] = useState<string>("all");
   const [selectedDestino, setSelectedDestino] = useState<string>("all");
 
   // Buscar dados do último mês disponível
@@ -81,11 +80,6 @@ const Transferencias = () => {
 
   const cores = useMemo(() => 
     Array.from(new Set(monthlyData.map(p => p.cor).filter(Boolean))).sort(),
-    [monthlyData]
-  );
-
-  const locaisOrigem = useMemo(() => 
-    Array.from(new Set(monthlyData.map(p => p.local).filter(Boolean))).sort(),
     [monthlyData]
   );
 
@@ -168,11 +162,10 @@ const Transferencias = () => {
       if (selectedFamilia !== "all" && s.familia !== selectedFamilia) return false;
       if (selectedTamanho !== "all" && s.tamanho !== selectedTamanho) return false;
       if (selectedCor !== "all" && s.cor !== selectedCor) return false;
-      if (selectedOrigem !== "all" && s.from !== selectedOrigem) return false;
       if (selectedDestino !== "all" && s.to !== selectedDestino) return false;
       return true;
     });
-  }, [suggestions, selectedClasse, selectedFamilia, selectedTamanho, selectedCor, selectedOrigem, selectedDestino]);
+  }, [suggestions, selectedClasse, selectedFamilia, selectedTamanho, selectedCor, selectedDestino]);
 
   const handlePrint = () => {
     window.print();
@@ -270,21 +263,6 @@ const Transferencias = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Local de Origem</label>
-              <Select value={selectedOrigem} onValueChange={setSelectedOrigem}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {locaisOrigem.map(l => (
-                    <SelectItem key={l} value={l!}>{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
               <label className="text-sm font-medium mb-2 block">Local de Destino</label>
               <Select value={selectedDestino} onValueChange={setSelectedDestino}>
                 <SelectTrigger>
@@ -320,8 +298,6 @@ const Transferencias = () => {
                   <th className="p-3 font-semibold">Família</th>
                   <th className="p-3 font-semibold">Cor</th>
                   <th className="p-3 font-semibold">Tamanho</th>
-                  <th className="p-3 font-semibold">Origem</th>
-                  <th className="p-3 font-semibold"></th>
                   <th className="p-3 font-semibold">Destino</th>
                   <th className="p-3 font-semibold text-right">Quantidade</th>
                   <th className="p-3 font-semibold print:hidden">Ação</th>
@@ -341,15 +317,6 @@ const Transferencias = () => {
                     <td className="p-3 text-muted-foreground">{suggestion.familia || "-"}</td>
                     <td className="p-3 text-muted-foreground">{suggestion.cor || "-"}</td>
                     <td className="p-3 text-muted-foreground">{suggestion.tamanho || "-"}</td>
-                    <td className="p-3">
-                      <div>
-                        <div className="font-medium">{suggestion.from}</div>
-                        <div className="text-xs text-muted-foreground">Estoque: {suggestion.fromStock}</div>
-                      </div>
-                    </td>
-                    <td className="p-3 text-center">
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    </td>
                     <td className="p-3">
                       <div>
                         <div className="font-medium">{suggestion.to}</div>
