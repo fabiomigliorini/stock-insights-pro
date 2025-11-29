@@ -109,7 +109,7 @@ export default function Classes() {
     };
   }, [filteredProducts]);
 
-  // Monthly data
+  // Monthly data with historical sales and future predictions
   const monthlyData = useMemo(() => {
     if (!classStats) return [];
     
@@ -126,17 +126,42 @@ export default function Classes() {
     const volatility = classStats.predominantVolatility === "Alta" ? 0.3 : 
                        classStats.predominantVolatility === "Media" ? 0.15 : 0.05;
     
-    return Array.from({ length: numMonths }, (_, i) => {
+    // Historical data
+    const historicalData = Array.from({ length: numMonths }, (_, i) => {
       const monthIndex = i % 12;
       const year = Math.floor(i / 12);
+      const vendas = Math.max(0, classStats.totalDemanda + (Math.random() - 0.5) * classStats.totalDemanda * volatility * 2);
       return {
         month: numMonths > 12 ? `${monthNames[monthIndex]}/${year + 1}` : monthNames[monthIndex],
-        vendas: Math.max(0, classStats.totalDemanda + (Math.random() - 0.5) * classStats.totalDemanda * volatility * 2),
+        vendas,
+        estoque: classStats.totalEstoque,
         min: classStats.totalMin,
         max: classStats.totalMax,
         seguranca: classStats.totalMin * 1.2,
+        predicao: undefined,
       };
     });
+
+    // Prediction for next 12 months
+    const predictionData = Array.from({ length: 12 }, (_, i) => {
+      const monthIndex = i % 12;
+      const lastHistoricalSales = historicalData[historicalData.length - 1]?.vendas || classStats.totalDemanda;
+      // Trend: slight growth with volatility
+      const trend = 1 + (i * 0.01); // 1% growth per month
+      const predicao = Math.max(0, lastHistoricalSales * trend + (Math.random() - 0.5) * lastHistoricalSales * volatility);
+      
+      return {
+        month: `${monthNames[monthIndex]} (P)`,
+        vendas: undefined,
+        estoque: undefined,
+        min: classStats.totalMin,
+        max: classStats.totalMax,
+        seguranca: classStats.totalMin * 1.2,
+        predicao,
+      };
+    });
+
+    return [...historicalData, ...predictionData];
   }, [classStats, selectedPeriod]);
 
   // Branch data
@@ -377,10 +402,12 @@ export default function Classes() {
                         <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                         <Tooltip contentStyle={{ fontSize: 12 }} />
                         <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                        <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" />
-                        <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Máx" />
-                        <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Mín" />
-                        <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={2} strokeDasharray="3 3" name="Segurança" />
+                        <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" connectNulls={false} />
+                        <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="Predição" connectNulls={false} />
+                        <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" connectNulls={false} />
+                        <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Máx" />
+                        <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Mín" />
+                        <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={1.5} strokeDasharray="3 3" name="Segurança" />
                       </LineChart>
                     </ResponsiveContainer>
                   </Card>
