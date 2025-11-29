@@ -157,15 +157,15 @@ export const SmartExcelUpload = ({ onDataImported }: SmartExcelUploadProps) => {
       console.log('Dados processados:', processedData);
       
       if (processedData.products) {
-        dataStore.setProducts(processedData.products);
+        console.log(`✅ ${processedData.products.length} produtos detectados`);
       }
       if (processedData.branches) {
-        dataStore.setBranches(processedData.branches);
+        console.log(`✅ ${processedData.branches.length} filiais detectadas`);
       }
       if (processedData.movements) {
-        dataStore.setMovements(processedData.movements);
+        console.log(`✅ ${processedData.movements.length} movimentações detectadas`);
       }
-
+      
       setSuccess(true);
       onDataImported(processedData);
     } catch (err) {

@@ -8,10 +8,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { dataStore } from "@/lib/dataStore";
+import { useData } from "@/contexts/DataContext";
 
 export const ProductsTable = () => {
-  const products = dataStore.getProducts();
+  const { products } = useData();
   
   const getStatusBadge = (status: string) => {
     switch (status) {

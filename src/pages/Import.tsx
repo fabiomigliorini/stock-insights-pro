@@ -2,37 +2,37 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { SmartExcelUpload } from "@/components/SmartExcelUpload";
 import { AutoImportButton } from "@/components/AutoImportButton";
 import { useNavigate } from "react-router-dom";
-import { dataStore } from "@/lib/dataStore";
-import { Product, BranchConfig, Movement } from "@/lib/excelParser";
+import { useData } from "@/contexts/DataContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Settings, Upload } from "lucide-react";
+import { toast } from "sonner";
 
 const Import = () => {
   const navigate = useNavigate();
+  const { setProducts, setBranches, setMovements } = useData();
 
-  const handleDataImported = (data: {
-    products?: Product[];
-    branches?: BranchConfig[];
-    movements?: Movement[];
-  }) => {
+  const handleDataImported = (data: any) => {
     if (data.products) {
-      dataStore.setProducts(data.products);
+      setProducts(data.products);
+      toast.success(`${data.products.length} produtos importados!`);
     }
     if (data.branches) {
-      dataStore.setBranches(data.branches);
+      setBranches(data.branches);
+      toast.success(`${data.branches.length} filiais importadas!`);
     }
     if (data.movements) {
-      dataStore.setMovements(data.movements);
+      setMovements(data.movements);
+      toast.success(`${data.movements.length} movimentações importadas!`);
     }
 
-    // Redirecionar para o dashboard após 2 segundos
+    // Redirecionar para o dashboard após 1 segundo
     setTimeout(() => {
       navigate("/");
-    }, 2000);
+    }, 1000);
   };
 
   return (

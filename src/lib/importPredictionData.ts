@@ -4,12 +4,15 @@ import { Product, BranchConfig } from "./excelParser";
 
 export const importPredictionData = async () => {
   try {
-    // Limpar dados existentes
-    dataStore.clear();
-    
     const response = await fetch("/data/modelo-predicao.xlsx");
     const arrayBuffer = await response.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+    const result: any = {
+      products: [],
+      branches: [],
+      movements: [],
+    };
 
     // Processar produtos
     if (workbook.SheetNames.includes("Produtos")) {
@@ -42,6 +45,7 @@ export const importPredictionData = async () => {
 
       dataStore.setProducts(products);
       console.log(`Importados ${products.length} produtos`);
+      result.products = products;
     }
 
     // Processar filiais
@@ -68,6 +72,7 @@ export const importPredictionData = async () => {
 
       dataStore.setBranches(branches);
       console.log(`Importadas ${branches.length} filiais`);
+      result.branches = branches;
     }
 
     // Processar movimentações
@@ -90,12 +95,14 @@ export const importPredictionData = async () => {
 
         dataStore.setMovements(movements);
         console.log(`Importadas ${movements.length} movimentações`);
+        result.movements = movements;
       }
     }
 
     return {
       success: true,
       message: "Dados importados com sucesso!",
+      data: result,
     };
   } catch (error) {
     console.error("Erro ao importar dados:", error);
