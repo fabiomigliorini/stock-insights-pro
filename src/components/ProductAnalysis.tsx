@@ -248,9 +248,12 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                     <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip contentStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="vendas" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="estoque" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                    <Tooltip 
+                      contentStyle={{ fontSize: 12 }} 
+                      formatter={(value: number) => value.toFixed(0)}
+                    />
+                    <Bar dataKey="vendas" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Vendas" />
+                    <Bar dataKey="estoque" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} name="Estoque" />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
@@ -267,6 +270,8 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                       outerRadius={80}
                       paddingAngle={2}
                       dataKey="value"
+                      label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
+                      labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
                     >
                       {branchDistribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
