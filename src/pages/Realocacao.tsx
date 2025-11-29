@@ -99,6 +99,8 @@ const Realocacao = () => {
     // Filtrar apenas filiais (excluir CD)
     const branchData = monthlyData.filter(p => p.local !== 'CD');
     
+    console.log('Total de registros (sem CD):', branchData.length);
+    
     // Agrupar produtos por SKU+Cor+Tamanho
     const productMap = new Map<string, MonthlySale[]>();
     
@@ -110,7 +112,12 @@ const Realocacao = () => {
       productMap.get(key)!.push(p);
     });
 
+    console.log('Produtos únicos (SKU+Cor+Tamanho):', productMap.size);
+
     const reallocationSuggestions: any[] = [];
+    
+    let totalOriginsWithSurplus = 0;
+    let totalDestinationsWithDeficit = 0;
 
     // Para cada grupo de produtos (mesmo SKU+Cor+Tamanho)
     productMap.forEach((productsByLocation, key) => {
@@ -127,6 +134,9 @@ const Realocacao = () => {
         const pontoPedido = p.ponto_pedido_mes || 0;
         return pontoPedido > 0 && stock < pontoPedido;
       });
+      
+      totalOriginsWithSurplus += originsWithSurplus.length;
+      totalDestinationsWithDeficit += destinationsWithDeficit.length;
 
       // Criar sugestões combinando origens com destinos
       originsWithSurplus.forEach(origin => {
@@ -172,6 +182,10 @@ const Realocacao = () => {
         });
       });
     });
+
+    console.log('Origens com excedente (acima do máximo):', totalOriginsWithSurplus);
+    console.log('Destinos com déficit (abaixo do ponto de pedido):', totalDestinationsWithDeficit);
+    console.log('Total de sugestões geradas:', reallocationSuggestions.length);
 
     return reallocationSuggestions.sort((a, b) => {
       if (a.priority === "high" && b.priority !== "high") return -1;
