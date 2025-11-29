@@ -355,7 +355,7 @@ export default function Classes() {
                 </Card>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <Card className="p-4">
                     <p className="text-sm text-muted-foreground">Demanda Total</p>
                     <p className="text-2xl font-bold mt-1">{classStats?.totalDemanda.toFixed(0)}</p>
@@ -363,23 +363,6 @@ export default function Classes() {
                   <Card className="p-4">
                     <p className="text-sm text-muted-foreground">Estoque Total</p>
                     <p className="text-2xl font-bold mt-1">{classStats?.totalEstoque.toFixed(0)}</p>
-                  </Card>
-                  <Card className="p-4">
-                    <p className="text-sm text-muted-foreground">Demanda Média</p>
-                    <p className="text-2xl font-bold mt-1">{classStats?.avgDemanda.toFixed(1)}</p>
-                  </Card>
-                  <Card className="p-4">
-                    <p className="text-sm text-muted-foreground">Volatilidade</p>
-                    <Badge 
-                      className="mt-2"
-                      variant={
-                        classStats?.predominantVolatility === "Alta" ? "destructive" : 
-                        classStats?.predominantVolatility === "Media" ? "secondary" : 
-                        "default"
-                      }
-                    >
-                      {classStats?.predominantVolatility}
-                    </Badge>
                   </Card>
                 </div>
 

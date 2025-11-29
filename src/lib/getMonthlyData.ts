@@ -46,19 +46,45 @@ export async function getMonthlyDataForSKU(
 
     if (!data || data.length === 0) return [];
 
+    // Agrupar por ano-mês e somar valores
+    const grouped = data.reduce((acc: Record<string, any>, row: MonthlySale) => {
+      const key = `${row.ano}-${row.mes}`;
+      if (!acc[key]) {
+        acc[key] = {
+          ano: row.ano,
+          mes: row.mes,
+          vendas: 0,
+          estoque: 0,
+          min: 0,
+          max: 0,
+          seguranca: 0,
+          pontoPedido: 0,
+        };
+      }
+      acc[key].vendas += row.qtde_vendida || 0;
+      acc[key].estoque += row.estoque_final_mes || 0;
+      acc[key].min += row.estoque_minimo_mes || 0;
+      acc[key].max += row.estoque_maximo_mes || 0;
+      acc[key].seguranca += row.estoque_seguranca_mes || 0;
+      acc[key].pontoPedido += row.ponto_pedido_mes || 0;
+      return acc;
+    }, {});
+
     const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-    return data.map((row: MonthlySale) => ({
-      mes: `${monthNames[row.mes - 1]}/${row.ano.toString().slice(-2)}`,
-      ano: row.ano,
-      mesNum: row.mes,
-      vendas: row.qtde_vendida || 0,
-      estoque: row.estoque_final_mes || 0,
-      min: row.estoque_minimo_mes || 0,
-      max: row.estoque_maximo_mes || 0,
-      seguranca: row.estoque_seguranca_mes || 0,
-      pontoPedido: row.ponto_pedido_mes || 0,
-    }));
+    return Object.values(grouped)
+      .sort((a: any, b: any) => a.ano - b.ano || a.mes - b.mes)
+      .map((group: any) => ({
+        mes: `${monthNames[group.mes - 1]}/${group.ano.toString().slice(-2)}`,
+        ano: group.ano,
+        mesNum: group.mes,
+        vendas: group.vendas,
+        estoque: group.estoque,
+        min: group.min,
+        max: group.max,
+        seguranca: group.seguranca,
+        pontoPedido: group.pontoPedido,
+      }));
   } catch (error) {
     console.error('Erro ao buscar dados mensais:', error);
     return [];
