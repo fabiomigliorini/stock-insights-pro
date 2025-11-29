@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { ExcelUpload } from "@/components/ExcelUpload";
+import { SmartExcelUpload } from "@/components/SmartExcelUpload";
 import { AutoImportButton } from "@/components/AutoImportButton";
 import { useNavigate } from "react-router-dom";
 import { dataStore } from "@/lib/dataStore";
@@ -69,43 +69,19 @@ const Import = () => {
               </div>
             </div>
             
-            <ExcelUpload onDataImported={handleDataImported} />
+            <SmartExcelUpload onDataImported={handleDataImported} />
 
             <Card className="p-6 bg-muted/50">
-              <h4 className="font-semibold text-foreground mb-3">📋 Formato Esperado da Planilha</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <p className="font-medium text-foreground mb-1">Aba: Produtos</p>
-                  <ul className="text-muted-foreground space-y-1 text-xs">
-                    <li>• SKU / Código</li>
-                    <li>• Produto / Descrição</li>
-                    <li>• Categoria</li>
-                    <li>• Estoque Atual</li>
-                    <li>• Estoque Mínimo</li>
-                    <li>• Estoque Máximo</li>
-                    <li>• Ponto de Reposição</li>
-                    <li>• Estoque de Segurança</li>
-                    <li>• Filial</li>
-                  </ul>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">Aba: Filiais</p>
-                  <ul className="text-muted-foreground space-y-1 text-xs">
-                    <li>• Nome / Filial</li>
-                    <li>• Estoque</li>
-                    <li>• Capacidade</li>
-                  </ul>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">Aba: Movimentação</p>
-                  <ul className="text-muted-foreground space-y-1 text-xs">
-                    <li>• Data</li>
-                    <li>• Produto</li>
-                    <li>• Quantidade</li>
-                    <li>• Tipo (entrada/saída)</li>
-                    <li>• Filial</li>
-                  </ul>
-                </div>
+              <h4 className="font-semibold text-foreground mb-3">✨ Importação Inteligente</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                O sistema detecta automaticamente as colunas da sua planilha, independente dos nomes usados.
+              </p>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p>• Detecta produtos por: SKU, Código, Produto, Descrição, Nome</p>
+                <p>• Detecta estoques por: Estoque, Saldo, Quantidade, Estoque Atual</p>
+                <p>• Detecta limites por: Mínimo, Máximo, Min, Max</p>
+                <p>• Detecta filiais por: Filial, Loja, Unidade, Nome</p>
+                <p>• Detecta movimentações por: Data, Quantidade, Tipo</p>
               </div>
             </Card>
           </TabsContent>
