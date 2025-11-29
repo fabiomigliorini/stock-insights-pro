@@ -88,12 +88,22 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsLoading(true);
 
-      // Upsert data in batches to avoid duplicates
-      console.log(`Importando ${sales.length} registros em lotes...`);
-      const batchSize = 1000;
-      for (let i = 0; i < sales.length; i += batchSize) {
-        const batch = sales.slice(i, i + batchSize);
-        console.log(`Processando lote ${Math.floor(i/batchSize) + 1} de ${Math.ceil(sales.length/batchSize)}`);
+      // Remove duplicates within the data (keep last occurrence)
+      const uniqueSales = Array.from(
+        sales.reduce((map, sale) => {
+          const key = `${sale.ano}-${sale.mes}-${sale.sku}-${sale.local}`;
+          map.set(key, sale);
+          return map;
+        }, new Map<string, MonthlySale>()).values()
+      );
+
+      console.log(`✅ ${sales.length} registros detectados, ${uniqueSales.length} únicos após remoção de duplicatas`);
+
+      // Upsert data in batches
+      const batchSize = 500;
+      for (let i = 0; i < uniqueSales.length; i += batchSize) {
+        const batch = uniqueSales.slice(i, i + batchSize);
+        console.log(`Processando lote ${Math.floor(i/batchSize) + 1} de ${Math.ceil(uniqueSales.length/batchSize)}`);
         
         const { error } = await supabase
           .from('monthly_sales')
@@ -108,7 +118,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
             throw error;
           }
           console.error('Erro ao inserir lote:', error);
-          toast.error(`Erro ao processar lote ${Math.floor(i/batchSize) + 1}`);
+          toast.error(`Erro ao processar lote ${Math.floor(i/batchSize) + 1}: ${error.message}`);
           throw error;
         }
       }
