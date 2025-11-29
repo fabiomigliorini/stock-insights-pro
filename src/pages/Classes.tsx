@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useData } from "@/contexts/DataContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
@@ -14,7 +14,16 @@ export default function Classes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("todos");
+  const [selectedColor, setSelectedColor] = useState("todos");
+  const [selectedSize, setSelectedSize] = useState("todos");
   const [selectedPeriod, setSelectedPeriod] = useState<"inicio" | "3anos" | "2anos" | "1ano" | "6meses">("1ano");
+
+  // Reset filters when class changes
+  useEffect(() => {
+    setSelectedLocation("todos");
+    setSelectedColor("todos");
+    setSelectedSize("todos");
+  }, [selectedClass]);
 
   // Get all unique classes
   const classes = useMemo(() => {
@@ -42,11 +51,34 @@ export default function Classes() {
     return ["todos", ...locs];
   }, [classProducts, selectedClass]);
 
-  // Filter products by location
+  // Get unique colors for the selected class
+  const colors = useMemo(() => {
+    if (!selectedClass) return ["todos"];
+    const cols = [...new Set(classProducts.map(p => p.cor).filter(Boolean))];
+    return ["todos", ...cols];
+  }, [classProducts, selectedClass]);
+
+  // Get unique sizes for the selected class
+  const sizes = useMemo(() => {
+    if (!selectedClass) return ["todos"];
+    const szs = [...new Set(classProducts.map(p => p.tamanho).filter(Boolean))];
+    return ["todos", ...szs];
+  }, [classProducts, selectedClass]);
+
+  // Filter products by location, color, and size
   const filteredProducts = useMemo(() => {
-    if (selectedLocation === "todos") return classProducts;
-    return classProducts.filter(p => p.local === selectedLocation);
-  }, [classProducts, selectedLocation]);
+    let filtered = classProducts;
+    if (selectedLocation !== "todos") {
+      filtered = filtered.filter(p => p.local === selectedLocation);
+    }
+    if (selectedColor !== "todos") {
+      filtered = filtered.filter(p => p.cor === selectedColor);
+    }
+    if (selectedSize !== "todos") {
+      filtered = filtered.filter(p => p.tamanho === selectedSize);
+    }
+    return filtered;
+  }, [classProducts, selectedLocation, selectedColor, selectedSize]);
 
   // Calculate aggregated stats
   const classStats = useMemo(() => {
@@ -161,7 +193,7 @@ export default function Classes() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="p-8 space-y-6 animate-in fade-in duration-500">
         <div>
           <h1 className="text-3xl font-bold">Análise por Classes</h1>
           <p className="text-muted-foreground">
@@ -226,15 +258,43 @@ export default function Classes() {
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-6">
+                  <div className="grid grid-cols-3 gap-6">
                     <div>
                       <h3 className="text-sm font-medium mb-2">Local de Estoque</h3>
-                      <RadioGroup value={selectedLocation} onValueChange={setSelectedLocation} className="flex gap-4">
+                      <RadioGroup value={selectedLocation} onValueChange={setSelectedLocation} className="flex flex-wrap gap-3">
                         {locations.map((loc) => (
                           <div key={loc} className="flex items-center space-x-2">
                             <RadioGroupItem value={loc} id={`loc-${loc}`} />
                             <Label htmlFor={`loc-${loc}`} className="text-sm cursor-pointer capitalize">
                               {loc}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium mb-2">Cor</h3>
+                      <RadioGroup value={selectedColor} onValueChange={setSelectedColor} className="flex flex-wrap gap-3">
+                        {colors.map((cor) => (
+                          <div key={cor} className="flex items-center space-x-2">
+                            <RadioGroupItem value={cor} id={`cor-${cor}`} />
+                            <Label htmlFor={`cor-${cor}`} className="text-sm cursor-pointer capitalize">
+                              {cor}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium mb-2">Tamanho</h3>
+                      <RadioGroup value={selectedSize} onValueChange={setSelectedSize} className="flex flex-wrap gap-3">
+                        {sizes.map((tam) => (
+                          <div key={tam} className="flex items-center space-x-2">
+                            <RadioGroupItem value={tam} id={`tam-${tam}`} />
+                            <Label htmlFor={`tam-${tam}`} className="text-sm cursor-pointer capitalize">
+                              {tam}
                             </Label>
                           </div>
                         ))}
