@@ -3,14 +3,17 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, Printer } from "lucide-react";
-import { useData } from "@/contexts/DataContext";
-import { useState, useMemo } from "react";
+import { Printer, ArrowRight } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
 import { useAutoLoad } from "@/hooks/useAutoLoad";
+import { supabase } from "@/integrations/supabase/client";
+import { MonthlySale } from "@/lib/importHistoricalData";
 
 const Transferencias = () => {
   useAutoLoad();
-  const { products, branches } = useData();
+  
+  const [monthlyData, setMonthlyData] = useState<MonthlySale[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Filtros
   const [selectedClasse, setSelectedClasse] = useState<string>("all");
@@ -20,92 +23,133 @@ const Transferencias = () => {
   const [selectedOrigem, setSelectedOrigem] = useState<string>("all");
   const [selectedDestino, setSelectedDestino] = useState<string>("all");
 
+  // Buscar dados do último mês disponível
+  useEffect(() => {
+    const fetchLatestMonthData = async () => {
+      try {
+        setLoading(true);
+        
+        // Buscar o último mês/ano disponível
+        const { data: latestData, error: latestError } = await supabase
+          .from('monthly_sales')
+          .select('ano, mes')
+          .order('ano', { ascending: false })
+          .order('mes', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (latestError) throw latestError;
+        if (!latestData) {
+          setLoading(false);
+          return;
+        }
+
+        // Buscar todos os dados desse mês
+        const { data, error } = await supabase
+          .from('monthly_sales')
+          .select('*')
+          .eq('ano', latestData.ano)
+          .eq('mes', latestData.mes);
+
+        if (error) throw error;
+        setMonthlyData(data || []);
+      } catch (error) {
+        console.error('Erro ao buscar dados mensais:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLatestMonthData();
+  }, []);
+
   // Extrair valores únicos para os filtros
   const classes = useMemo(() => 
-    Array.from(new Set(products.map(p => p.classe).filter(Boolean))).sort(),
-    [products]
+    Array.from(new Set(monthlyData.map(p => p.classe).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
   const familias = useMemo(() => 
-    Array.from(new Set(products.map(p => p.familia).filter(Boolean))).sort(),
-    [products]
+    Array.from(new Set(monthlyData.map(p => p.familia).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
   const tamanhos = useMemo(() => 
-    Array.from(new Set(products.map(p => p.tamanho).filter(Boolean))).sort(),
-    [products]
+    Array.from(new Set(monthlyData.map(p => p.tamanho).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
   const cores = useMemo(() => 
-    Array.from(new Set(products.map(p => p.cor).filter(Boolean))).sort(),
-    [products]
+    Array.from(new Set(monthlyData.map(p => p.cor).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
-  const locais = useMemo(() => 
-    Array.from(new Set(products.map(p => p.local).filter(Boolean))).sort(),
-    [products]
+  const locaisOrigem = useMemo(() => 
+    Array.from(new Set(monthlyData.map(p => p.local).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
-  // Gerar sugestões de transferência: CD -> Filiais com estoque abaixo do mínimo
+  const locaisDestino = useMemo(() => 
+    Array.from(new Set(monthlyData.map(p => p.local).filter(Boolean))).sort(),
+    [monthlyData]
+  );
+
+  // Gerar sugestões de transferência
   const suggestions = useMemo(() => {
-    const transferSuggestions = [];
+    // Agrupar produtos por SKU+Cor+Tamanho
+    const productMap = new Map<string, MonthlySale[]>();
     
-    // Agrupar produtos por SKU base (sem considerar local)
-    const productsBySku: { [key: string]: any[] } = {};
-    products.forEach(p => {
-      if (!productsBySku[p.sku]) {
-        productsBySku[p.sku] = [];
+    monthlyData.forEach(p => {
+      const key = `${p.sku}_${p.cor || ''}_${p.tamanho || ''}`;
+      if (!productMap.has(key)) {
+        productMap.set(key, []);
       }
-      productsBySku[p.sku].push(p);
+      productMap.get(key)!.push(p);
     });
 
-    // Para cada grupo de SKU, identificar oportunidades de transferência do CD
-    Object.keys(productsBySku).forEach(sku => {
-      const skuProducts = productsBySku[sku];
-      
-      // Encontrar o produto no CD
-      const cdProduct = skuProducts.find(p => p.local === 'CD');
-      
-      // Se não há produto no CD ou CD não tem estoque, pular
-      if (!cdProduct || (cdProduct.stock || 0) <= 0) return;
+    const transferSuggestions: any[] = [];
 
-      // Encontrar filiais com estoque abaixo do mínimo
-      const filiaisNeedingStock = skuProducts.filter(p => 
-        p.local !== 'CD' && 
-        (p.stock || 0) < (p.estoqueMinSugerido || p.min || 0)
-      );
+    // Para cada grupo de produtos (mesmo SKU+Cor+Tamanho)
+    productMap.forEach((productsByLocation, key) => {
+      // Encontrar o CD
+      const cdProduct = productsByLocation.find(p => p.local === 'CD');
+      if (!cdProduct || (cdProduct.estoque_final_mes || 0) <= 0) return; // Sem estoque no CD
 
-      // Criar sugestões para cada filial que precisa de estoque
-      filiaisNeedingStock.forEach(filial => {
-        const estoqueMax = filial.estoqueMaxSugerido || filial.max || 0;
-        const saldoFilial = filial.stock || 0;
-        const saldoCD = cdProduct.stock || 0;
-        
-        // Quantidade = MIN(estoque_max_filial - saldo_filial, saldo_CD)
-        const quantidadeNecessaria = estoqueMax - saldoFilial;
-        const transferQty = Math.min(quantidadeNecessaria, saldoCD);
+      // Para cada filial
+      const branches = productsByLocation.filter(p => p.local !== 'CD');
+      branches.forEach(branchProduct => {
+        const branchStock = branchProduct.estoque_final_mes || 0;
+        const branchMin = branchProduct.estoque_minimo_mes || 0;
+        const branchMax = branchProduct.estoque_maximo_mes || 0;
+        const cdStock = cdProduct.estoque_final_mes || 0;
 
-        if (transferQty > 0) {
-          const estoqueMin = filial.estoqueMinSugerido || filial.min || 0;
-          const deficit = estoqueMin - saldoFilial;
-          
-          transferSuggestions.push({
-            id: `${cdProduct.id}-${filial.id}`,
-            sku: cdProduct.sku,
-            produto: cdProduct.name,
-            classe: cdProduct.classe,
-            familia: cdProduct.familia,
-            cor: cdProduct.cor,
-            tamanho: cdProduct.tamanho,
-            from: 'CD',
-            to: filial.local,
-            quantity: Math.round(transferQty),
-            priority: deficit > 50 ? "high" : "medium",
-            fromStock: saldoCD,
-            toStock: saldoFilial,
-            toMin: estoqueMin,
-            toMax: estoqueMax
-          });
+        // Se a filial está abaixo do mínimo
+        if (branchStock < branchMin) {
+          // Quantidade a transferir = MIN(max_filial - saldo_filial, saldo_cd)
+          const quantityNeeded = branchMax - branchStock;
+          const quantity = Math.min(quantityNeeded, cdStock);
+
+          if (quantity > 0) {
+            transferSuggestions.push({
+              id: `${cdProduct.sku}_${cdProduct.local}_${branchProduct.local}`,
+              sku: cdProduct.sku,
+              produto: cdProduct.produto,
+              classe: cdProduct.classe,
+              familia: cdProduct.familia,
+              cor: cdProduct.cor,
+              tamanho: cdProduct.tamanho,
+              from: cdProduct.local,
+              cidadeOrigem: cdProduct.cidade,
+              to: branchProduct.local,
+              cidadeDestino: branchProduct.cidade,
+              quantity: Math.round(quantity),
+              fromStock: cdStock,
+              toStock: branchStock,
+              toMin: branchMin,
+              toMax: branchMax,
+              priority: branchStock === 0 ? "high" : "medium",
+            });
+          }
         }
       });
     });
@@ -115,7 +159,7 @@ const Transferencias = () => {
       if (a.priority !== "high" && b.priority === "high") return 1;
       return b.quantity - a.quantity;
     });
-  }, [products]);
+  }, [monthlyData]);
 
   // Aplicar filtros
   const filteredSuggestions = useMemo(() => {
@@ -133,6 +177,16 @@ const Transferencias = () => {
   const handlePrint = () => {
     window.print();
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="p-8 flex items-center justify-center">
+          <p className="text-muted-foreground">Carregando dados...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -223,7 +277,7 @@ const Transferencias = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  {locais.map(l => (
+                  {locaisOrigem.map(l => (
                     <SelectItem key={l} value={l!}>{l}</SelectItem>
                   ))}
                 </SelectContent>
@@ -238,7 +292,7 @@ const Transferencias = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  {locais.map(l => (
+                  {locaisDestino.map(l => (
                     <SelectItem key={l} value={l!}>{l}</SelectItem>
                   ))}
                 </SelectContent>
