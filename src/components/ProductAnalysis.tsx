@@ -18,6 +18,7 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
   const [selectedLocation, setSelectedLocation] = useState("todos");
   const [selectedColor, setSelectedColor] = useState("todos");
   const [selectedSize, setSelectedSize] = useState("todos");
+  const [selectedPeriod, setSelectedPeriod] = useState<"inicio" | "3anos" | "2anos" | "1ano" | "6meses">("1ano");
 
   // Get unique locations and colors for this product
   const locations = useMemo(() => {
@@ -68,15 +69,30 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
     const avgSeguranca = filteredProducts.reduce((sum, p) => sum + (p.estoqueSeguranca || 0), 0) / filteredProducts.length;
     const volatility = product.volatilidade === "Alta" ? 0.3 : product.volatilidade === "Media" ? 0.15 : 0.05;
     
-    return Array.from({ length: 12 }, (_, i) => ({
-      month: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"][i],
-      vendas: Math.max(0, avgDemanda + (Math.random() - 0.5) * avgDemanda * volatility * 2),
-      estoque: avgMin,
-      min: avgMin,
-      max: avgMax,
-      seguranca: avgSeguranca,
-    }));
-  }, [product, filteredProducts]);
+    // Determinar número de meses baseado no período
+    const monthsMap = {
+      "inicio": 36,
+      "3anos": 36,
+      "2anos": 24,
+      "1ano": 12,
+      "6meses": 6,
+    };
+    const numMonths = monthsMap[selectedPeriod];
+    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    
+    return Array.from({ length: numMonths }, (_, i) => {
+      const monthIndex = i % 12;
+      const year = Math.floor(i / 12);
+      return {
+        month: numMonths > 12 ? `${monthNames[monthIndex]}/${year + 1}` : monthNames[monthIndex],
+        vendas: Math.max(0, avgDemanda + (Math.random() - 0.5) * avgDemanda * volatility * 2),
+        estoque: avgMin,
+        min: avgMin,
+        max: avgMax,
+        seguranca: avgSeguranca,
+      };
+    });
+  }, [product, filteredProducts, selectedPeriod]);
 
   const branchData = useMemo(() => {
     if (!product || filteredProducts.length === 0) return [];
@@ -199,11 +215,36 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold mb-2">Venda Mensal</h3>
                   <div className="flex gap-3 text-xs mb-3">
-                    <span className="text-muted-foreground cursor-pointer hover:text-foreground">DESDE INÍCIO</span>
-                    <span className="text-muted-foreground cursor-pointer hover:text-foreground">3 ANOS</span>
-                    <span className="text-muted-foreground cursor-pointer hover:text-foreground">2 ANOS</span>
-                    <span className="text-primary font-semibold cursor-pointer">1 ANO</span>
-                    <span className="text-muted-foreground cursor-pointer hover:text-foreground">6 MESES</span>
+                    <span 
+                      onClick={() => setSelectedPeriod("inicio")}
+                      className={`cursor-pointer transition-colors ${selectedPeriod === "inicio" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      DESDE INÍCIO
+                    </span>
+                    <span 
+                      onClick={() => setSelectedPeriod("3anos")}
+                      className={`cursor-pointer transition-colors ${selectedPeriod === "3anos" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      3 ANOS
+                    </span>
+                    <span 
+                      onClick={() => setSelectedPeriod("2anos")}
+                      className={`cursor-pointer transition-colors ${selectedPeriod === "2anos" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      2 ANOS
+                    </span>
+                    <span 
+                      onClick={() => setSelectedPeriod("1ano")}
+                      className={`cursor-pointer transition-colors ${selectedPeriod === "1ano" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      1 ANO
+                    </span>
+                    <span 
+                      onClick={() => setSelectedPeriod("6meses")}
+                      className={`cursor-pointer transition-colors ${selectedPeriod === "6meses" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      6 MESES
+                    </span>
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={180}>
