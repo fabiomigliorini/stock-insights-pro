@@ -65,6 +65,7 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
     const avgDemanda = filteredProducts.reduce((sum, p) => sum + (p.demandaMedia || 0), 0) / filteredProducts.length;
     const avgMin = filteredProducts.reduce((sum, p) => sum + (p.estoqueMinSugerido || p.min || 0), 0) / filteredProducts.length;
     const avgMax = filteredProducts.reduce((sum, p) => sum + (p.estoqueMaxSugerido || p.max || 0), 0) / filteredProducts.length;
+    const avgSeguranca = filteredProducts.reduce((sum, p) => sum + (p.estoqueSeguranca || 0), 0) / filteredProducts.length;
     const volatility = product.volatilidade === "Alta" ? 0.3 : product.volatilidade === "Media" ? 0.15 : 0.05;
     
     return Array.from({ length: 12 }, (_, i) => ({
@@ -73,6 +74,7 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
       estoque: avgMin,
       min: avgMin,
       max: avgMax,
+      seguranca: avgSeguranca,
     }));
   }, [product, filteredProducts]);
 
@@ -212,9 +214,9 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                     <Tooltip contentStyle={{ fontSize: 12 }} />
                     <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
                     <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" />
-                    <Line type="monotone" dataKey="estoque" stroke="hsl(var(--destructive))" strokeWidth={2} name="Estoque" />
-                    <Line type="monotone" dataKey="min" stroke="hsl(var(--muted))" strokeWidth={1} strokeDasharray="5 5" name="Mín" />
-                    <Line type="monotone" dataKey="max" stroke="hsl(var(--muted))" strokeWidth={1} strokeDasharray="5 5" name="Máx" />
+                    <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Máx" />
+                    <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Mín" />
+                    <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={2} strokeDasharray="3 3" name="Segurança" />
                   </LineChart>
                 </ResponsiveContainer>
               </Card>
