@@ -4,12 +4,17 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, BarChart3 } from "lucide-react";
+import { ProductAnalysis } from "@/components/ProductAnalysis";
+import { Product } from "@/lib/excelParser";
 
 const Produtos = () => {
   const { products } = useData();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,12 +82,13 @@ const Produtos = () => {
                   <TableHead className="text-right">Máx. Sugerido</TableHead>
                   <TableHead className="text-right">Ponto Pedido</TableHead>
                   <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-center">Análise</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProducts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={14} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={15} className="text-center text-muted-foreground py-8">
                       Nenhum produto encontrado
                     </TableCell>
                   </TableRow>
@@ -107,6 +113,18 @@ const Produtos = () => {
                       <TableCell className="text-right">{product.estoqueMaxSugerido || product.max}</TableCell>
                       <TableCell className="text-right">{product.pontoPedido || product.reorderPoint}</TableCell>
                       <TableCell className="text-center">{getStatusBadge(product.status)}</TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            setAnalysisOpen(true);
+                          }}
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -119,6 +137,13 @@ const Produtos = () => {
             </p>
           )}
         </Card>
+
+        <ProductAnalysis
+          product={selectedProduct}
+          allProducts={products}
+          open={analysisOpen}
+          onOpenChange={setAnalysisOpen}
+        />
       </div>
     </DashboardLayout>
   );
