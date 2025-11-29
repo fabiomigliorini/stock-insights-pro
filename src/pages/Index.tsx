@@ -10,9 +10,16 @@ import { useAutoLoad } from "@/hooks/useAutoLoad";
 
 const Index = () => {
   useAutoLoad(); // Carrega dados automaticamente se estiver vazio
-  const { getTotalStock, getLowStockCount } = useData();
+  const { products, getTotalStock } = useData();
+  
+  // KPIs calculados
   const totalStock = getTotalStock();
-  const lowStockCount = getLowStockCount();
+  const produtosAtivos = products.length;
+  const precisamReposicao = products.filter(p => p.stock < (p.pontoPedido || p.reorderPoint)).length;
+  const criticos = products.filter(p => 
+    p.volatilidade?.toLowerCase() === 'alta' && p.status === 'low'
+  ).length;
+  const lowStockCount = products.filter(p => p.status === 'low').length;
   
   return (
     <DashboardLayout>
@@ -28,36 +35,36 @@ const Index = () => {
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <KPICard
-            title="Estoque Total"
-            value={totalStock.toLocaleString('pt-BR')}
-            change="+5.2% vs. mês anterior"
+            title="Produtos Ativos"
+            value={produtosAtivos.toLocaleString('pt-BR')}
+            change={`${products.filter(p => p.status === 'ok').length} em níveis normais`}
             changeType="positive"
             icon={Package}
             iconColor="text-primary"
           />
           <KPICard
-            title="Itens Abaixo do Mínimo"
-            value={lowStockCount}
-            change="Atenção necessária"
-            changeType={lowStockCount > 0 ? "negative" : "positive"}
+            title="Precisam Reposição"
+            value={precisamReposicao.toLocaleString('pt-BR')}
+            change="Abaixo do ponto de pedido"
+            changeType={precisamReposicao > 0 ? "negative" : "positive"}
             icon={AlertTriangle}
+            iconColor="text-warning"
+          />
+          <KPICard
+            title="Críticos"
+            value={criticos.toLocaleString('pt-BR')}
+            change="Alta volatilidade + estoque baixo"
+            changeType={criticos > 0 ? "negative" : "positive"}
+            icon={TrendingDown}
             iconColor="text-destructive"
           />
           <KPICard
-            title="Valor em Estoque"
-            value="R$ 485K"
-            change="+2.1% vs. mês anterior"
-            changeType="positive"
+            title="Estoque Total"
+            value={totalStock.toLocaleString('pt-BR')}
+            change={`${lowStockCount} abaixo do mínimo`}
+            changeType={lowStockCount > 0 ? "negative" : "positive"}
             icon={DollarSign}
             iconColor="text-success"
-          />
-          <KPICard
-            title="Giro de Estoque"
-            value="3.4x"
-            change="-0.3x vs. mês anterior"
-            changeType="negative"
-            icon={TrendingDown}
-            iconColor="text-warning"
           />
         </div>
 
