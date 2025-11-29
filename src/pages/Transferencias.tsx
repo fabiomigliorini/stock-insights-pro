@@ -46,7 +46,7 @@ const Transferencias = () => {
     [products]
   );
 
-  // Gerar sugestões de transferência baseadas em estoque e demanda
+  // Gerar sugestões de transferência: CD -> Filiais com estoque abaixo do mínimo
   const suggestions = useMemo(() => {
     const transferSuggestions = [];
     
@@ -59,53 +59,54 @@ const Transferencias = () => {
       productsBySku[p.sku].push(p);
     });
 
-    // Para cada grupo de SKU, identificar oportunidades de transferência
+    // Para cada grupo de SKU, identificar oportunidades de transferência do CD
     Object.keys(productsBySku).forEach(sku => {
       const skuProducts = productsBySku[sku];
       
-      if (skuProducts.length < 2) return; // Precisa ter pelo menos 2 locais
+      // Encontrar o produto no CD
+      const cdProduct = skuProducts.find(p => p.local === 'CD');
+      
+      // Se não há produto no CD ou CD não tem estoque, pular
+      if (!cdProduct || (cdProduct.stock || 0) <= 0) return;
 
-      // Ordenar por diferença entre estoque atual e estoque mínimo
-      const productsWithGap = skuProducts.map(p => ({
-        ...p,
-        gap: (p.stock || 0) - (p.estoqueMin || 0),
-        needsStock: (p.stock || 0) < (p.estoqueMin || 0),
-        hasExcess: (p.stock || 0) > (p.estoqueMax || 0)
-      }));
+      // Encontrar filiais com estoque abaixo do mínimo
+      const filiaisNeedingStock = skuProducts.filter(p => 
+        p.local !== 'CD' && 
+        (p.stock || 0) < (p.estoqueMinSugerido || p.min || 0)
+      );
 
-      const needsStockLocations = productsWithGap.filter(p => p.needsStock);
-      const hasExcessLocations = productsWithGap.filter(p => p.hasExcess);
+      // Criar sugestões para cada filial que precisa de estoque
+      filiaisNeedingStock.forEach(filial => {
+        const estoqueMax = filial.estoqueMaxSugerido || filial.max || 0;
+        const saldoFilial = filial.stock || 0;
+        const saldoCD = cdProduct.stock || 0;
+        
+        // Quantidade = MIN(estoque_max_filial - saldo_filial, saldo_CD)
+        const quantidadeNecessaria = estoqueMax - saldoFilial;
+        const transferQty = Math.min(quantidadeNecessaria, saldoCD);
 
-      // Criar sugestões de transferência
-      needsStockLocations.forEach(dest => {
-        hasExcessLocations.forEach(orig => {
-          if (orig.local !== dest.local) {
-            const transferQty = Math.min(
-              Math.abs(dest.gap),
-              orig.gap,
-              Math.floor((orig.stock || 0) * 0.3) // Máximo 30% do estoque de origem
-            );
-
-            if (transferQty > 0) {
-              transferSuggestions.push({
-                id: `${orig.id}-${dest.id}`,
-                sku: orig.sku,
-                produto: orig.name,
-                classe: orig.classe,
-                familia: orig.familia,
-                cor: orig.cor,
-                tamanho: orig.tamanho,
-                from: orig.local,
-                to: dest.local,
-                quantity: Math.round(transferQty),
-                priority: dest.gap < -50 ? "high" : "medium",
-                fromStock: orig.stock,
-                toStock: dest.stock,
-                toMin: dest.estoqueMin
-              });
-            }
-          }
-        });
+        if (transferQty > 0) {
+          const estoqueMin = filial.estoqueMinSugerido || filial.min || 0;
+          const deficit = estoqueMin - saldoFilial;
+          
+          transferSuggestions.push({
+            id: `${cdProduct.id}-${filial.id}`,
+            sku: cdProduct.sku,
+            produto: cdProduct.name,
+            classe: cdProduct.classe,
+            familia: cdProduct.familia,
+            cor: cdProduct.cor,
+            tamanho: cdProduct.tamanho,
+            from: 'CD',
+            to: filial.local,
+            quantity: Math.round(transferQty),
+            priority: deficit > 50 ? "high" : "medium",
+            fromStock: saldoCD,
+            toStock: saldoFilial,
+            toMin: estoqueMin,
+            toMax: estoqueMax
+          });
+        }
       });
     });
 
@@ -299,7 +300,7 @@ const Transferencias = () => {
                       <div>
                         <div className="font-medium">{suggestion.to}</div>
                         <div className="text-xs text-muted-foreground">
-                          Estoque: {suggestion.toStock} / Mín: {suggestion.toMin}
+                          Atual: {suggestion.toStock} / Mín: {suggestion.toMin} / Máx: {suggestion.toMax}
                         </div>
                       </div>
                     </td>
