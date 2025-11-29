@@ -5,28 +5,28 @@ import { TrendingUp, TrendingDown, Activity, AlertTriangle } from "lucide-react"
 import { Badge } from "@/components/ui/badge";
 
 const Predicoes = () => {
-  const { products } = useData();
+  const { productStats } = useData();
 
   // Agregar dados por volatilidade
   const byVolatilidade = {
-    alta: products.filter(p => p.volatilidade?.toLowerCase() === 'alta').length,
-    media: products.filter(p => p.volatilidade?.toLowerCase() === 'media').length,
-    baixa: products.filter(p => p.volatilidade?.toLowerCase() === 'baixa').length,
+    alta: productStats.filter(p => p.volatilidade?.toLowerCase() === 'alta').length,
+    media: productStats.filter(p => p.volatilidade?.toLowerCase() === 'media' || p.volatilidade?.toLowerCase() === 'média').length,
+    baixa: productStats.filter(p => p.volatilidade?.toLowerCase() === 'baixa').length,
   };
 
   // Demanda total média
-  const totalDemandaMedia = products.reduce((sum, p) => sum + (p.demandaMedia || 0), 0);
+  const totalDemandaMedia = productStats.reduce((sum, p) => sum + (p.demanda_media || 0), 0);
 
   // Top produtos por demanda
-  const topDemanda = [...products]
-    .filter(p => p.demandaMedia)
-    .sort((a, b) => (b.demandaMedia || 0) - (a.demandaMedia || 0))
+  const topDemanda = [...productStats]
+    .filter(p => p.demanda_media)
+    .sort((a, b) => (b.demanda_media || 0) - (a.demanda_media || 0))
     .slice(0, 10);
 
   // Produtos com maior CV de demanda (mais incertos)
-  const maiorCV = [...products]
-    .filter(p => p.cvDemanda)
-    .sort((a, b) => (b.cvDemanda || 0) - (a.cvDemanda || 0))
+  const maiorCV = [...productStats]
+    .filter(p => p.cv_demanda)
+    .sort((a, b) => (b.cv_demanda || 0) - (a.cv_demanda || 0))
     .slice(0, 10);
 
   return (
@@ -55,7 +55,7 @@ const Predicoes = () => {
               <TrendingUp className="h-5 w-5 text-success" />
               <h3 className="font-semibold text-foreground">Produtos Analisados</h3>
             </div>
-            <p className="text-3xl font-bold text-foreground">{products.length}</p>
+            <p className="text-3xl font-bold text-foreground">{productStats.length}</p>
             <p className="text-sm text-muted-foreground">SKUs + Locais</p>
           </Card>
 
@@ -74,7 +74,7 @@ const Predicoes = () => {
               <h3 className="font-semibold text-foreground">Maior CV Demanda</h3>
             </div>
             <p className="text-3xl font-bold text-foreground">
-              {maiorCV.length > 0 ? maiorCV[0].cvDemanda?.toFixed(1) : '0'}%
+              {maiorCV.length > 0 ? (maiorCV[0].cv_demanda * 100)?.toFixed(1) : '0'}%
             </p>
             <p className="text-sm text-muted-foreground">coeficiente de variação máximo</p>
           </Card>
@@ -122,11 +122,11 @@ const Predicoes = () => {
           </h3>
           <div className="space-y-3">
             {topDemanda.map((product, index) => (
-              <div key={product.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div key={`${product.sku}-${product.local}`} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <span className="font-bold text-lg text-muted-foreground w-8">#{index + 1}</span>
                   <div>
-                    <p className="font-medium text-foreground">{product.name}</p>
+                    <p className="font-medium text-foreground">{product.produto}</p>
                     <p className="text-sm text-muted-foreground">
                       {product.familia} • {product.local} • SKU: {product.sku}
                     </p>
@@ -134,10 +134,10 @@ const Predicoes = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-bold text-foreground">
-                    {product.demandaMedia?.toFixed(2)}
+                    {product.demanda_media?.toFixed(2)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    CV: {product.cvDemanda?.toFixed(1)}%
+                    CV: {(product.cv_demanda * 100)?.toFixed(1)}%
                   </p>
                 </div>
               </div>
@@ -158,20 +158,20 @@ const Predicoes = () => {
           </p>
           <div className="space-y-2">
             {maiorCV.map((product, index) => (
-              <div key={product.id} className="flex items-center justify-between p-3 bg-warning/10 rounded-lg border border-warning/20">
+              <div key={`${product.sku}-${product.local}`} className="flex items-center justify-between p-3 bg-warning/10 rounded-lg border border-warning/20">
                 <div className="flex items-center gap-3">
                   <span className="font-bold text-lg text-muted-foreground w-8">#{index + 1}</span>
                   <div>
-                    <p className="font-medium text-foreground">{product.name}</p>
+                    <p className="font-medium text-foreground">{product.produto}</p>
                     <p className="text-sm text-muted-foreground">
                       {product.local} • SKU: {product.sku}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <Badge variant="warning">CV: {product.cvDemanda?.toFixed(1)}%</Badge>
+                  <Badge variant="warning">CV: {(product.cv_demanda * 100)?.toFixed(1)}%</Badge>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Demanda: {product.demandaMedia?.toFixed(1)} ± {product.demandaStd?.toFixed(1)}
+                    Demanda: {product.demanda_media?.toFixed(1)} ± {product.demanda_std?.toFixed(1)}
                   </p>
                 </div>
               </div>

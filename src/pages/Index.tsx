@@ -8,14 +8,14 @@ import { useAutoLoad } from "@/hooks/useAutoLoad";
 
 const Index = () => {
   useAutoLoad();
-  const { products } = useData();
+  const { productStats } = useData();
   
   // KPIs baseados APENAS nos dados reais da planilha
-  const produtosAtivos = products.length;
-  const altaVolatilidade = products.filter(p => p.volatilidade?.toLowerCase() === 'alta').length;
-  const mediaVolatilidade = products.filter(p => p.volatilidade?.toLowerCase() === 'media').length;
-  const baixaVolatilidade = products.filter(p => p.volatilidade?.toLowerCase() === 'baixa').length;
-  const demandaTotal = products.reduce((sum, p) => sum + (p.demandaMedia || 0), 0);
+  const produtosAtivos = productStats.length;
+  const altaVolatilidade = productStats.filter(p => p.volatilidade?.toLowerCase() === 'alta').length;
+  const mediaVolatilidade = productStats.filter(p => p.volatilidade?.toLowerCase() === 'media' || p.volatilidade?.toLowerCase() === 'média').length;
+  const baixaVolatilidade = productStats.filter(p => p.volatilidade?.toLowerCase() === 'baixa').length;
+  const demandaTotal = productStats.reduce((sum, p) => sum + (p.demanda_media || 0), 0);
   
   return (
     <DashboardLayout>
