@@ -1,20 +1,21 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { AutoLoadData } from "@/components/AutoLoadData";
 import { KPICard } from "@/components/KPICard";
 import { StockChart } from "@/components/StockChart";
 import { BranchesOverview } from "@/components/BranchesOverview";
 import { TransferSuggestions } from "@/components/TransferSuggestions";
 import { ProductsTable } from "@/components/ProductsTable";
 import { Package, TrendingDown, DollarSign, AlertTriangle } from "lucide-react";
-import { dataStore } from "@/lib/dataStore";
+import { useData } from "@/contexts/DataContext";
+import { useAutoLoad } from "@/hooks/useAutoLoad";
 
 const Index = () => {
-  const totalStock = dataStore.getTotalStock();
-  const lowStockCount = dataStore.getLowStockCount();
+  useAutoLoad(); // Carrega dados automaticamente se estiver vazio
+  const { getTotalStock, getLowStockCount } = useData();
+  const totalStock = getTotalStock();
+  const lowStockCount = getLowStockCount();
   
   return (
     <DashboardLayout>
-      <AutoLoadData />
       <div className="p-8 space-y-8 animate-in fade-in duration-500">
         {/* Header */}
         <div>

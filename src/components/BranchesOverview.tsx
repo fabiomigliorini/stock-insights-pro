@@ -1,10 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { dataStore } from "@/lib/dataStore";
+import { useData } from "@/contexts/DataContext";
 
 export const BranchesOverview = () => {
-  const branches = dataStore.getBranches();
+  const { branches } = useData();
   
   const getStatusColor = (status: string) => {
     switch (status) {

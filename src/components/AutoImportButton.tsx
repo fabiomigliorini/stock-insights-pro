@@ -3,26 +3,42 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Database, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { importPredictionData } from "@/lib/importPredictionData";
+import { useData } from "@/contexts/DataContext";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export const AutoImportButton = () => {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const { setProducts, setBranches, setMovements } = useData();
   const navigate = useNavigate();
 
   const handleImport = async () => {
     setLoading(true);
-    setResult(null);
 
     const importResult = await importPredictionData();
-    setResult(importResult);
-    setLoading(false);
+    
+    if (importResult.success && importResult.data) {
+      if (importResult.data.products) {
+        setProducts(importResult.data.products);
+        toast.success(`${importResult.data.products.length} produtos importados!`);
+      }
+      if (importResult.data.branches) {
+        setBranches(importResult.data.branches);
+        toast.success(`${importResult.data.branches.length} filiais importadas!`);
+      }
+      if (importResult.data.movements) {
+        setMovements(importResult.data.movements);
+        toast.success(`${importResult.data.movements.length} movimentações importadas!`);
+      }
 
-    if (importResult.success) {
       setTimeout(() => {
         navigate("/");
-      }, 2000);
+      }, 1000);
+    } else {
+      toast.error(importResult.message);
     }
+
+    setLoading(false);
   };
 
   return (
@@ -40,23 +56,6 @@ export const AutoImportButton = () => {
             produtos, filiais, configurações de estoque e histórico de movimentações.
           </p>
 
-          {result && (
-            <div
-              className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${
-                result.success
-                  ? "bg-success/10 text-success"
-                  : "bg-destructive/10 text-destructive"
-              }`}
-            >
-              {result.success ? (
-                <CheckCircle className="h-5 w-5" />
-              ) : (
-                <AlertCircle className="h-5 w-5" />
-              )}
-              <span className="text-sm font-medium">{result.message}</span>
-            </div>
-          )}
-
           <Button onClick={handleImport} disabled={loading}>
             {loading ? (
               <>
@@ -66,7 +65,7 @@ export const AutoImportButton = () => {
             ) : (
               <>
                 <Database className="h-4 w-4 mr-2" />
-                Importar Dados Agora
+                Importar Dados de Exemplo
               </>
             )}
           </Button>

@@ -2,11 +2,11 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { BranchesOverview } from "@/components/BranchesOverview";
 import { TransferSuggestions } from "@/components/TransferSuggestions";
 import { Card } from "@/components/ui/card";
-import { dataStore } from "@/lib/dataStore";
+import { useData } from "@/contexts/DataContext";
 import { Building2, MapPin, Phone } from "lucide-react";
 
 const Filiais = () => {
-  const branches = dataStore.getBranches();
+  const { branches } = useData();
 
   return (
     <DashboardLayout>
