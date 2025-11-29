@@ -2,8 +2,8 @@ import * as XLSX from 'xlsx';
 
 export interface Product {
   id: string;
-  name: string;
   sku: string;
+  name: string;
   category: string;
   stock: number;
   min: number;
@@ -12,6 +12,23 @@ export interface Product {
   safetyStock: number;
   status: 'low' | 'ok' | 'high';
   filial: string;
+  // Campos específicos da planilha BLW (opcionais)
+  familia?: string;
+  classe?: string;
+  subclasse?: string;
+  cor?: string;
+  tamanho?: string;
+  local?: string;
+  cidade?: string;
+  demandaMedia?: number;
+  demandaStd?: number;
+  cvDemanda?: number;
+  volatilidade?: string;
+  estoqueSeguranca?: number;
+  estoqueMinSugerido?: number;
+  estoqueMaxSugerido?: number;
+  pontoPedido?: number;
+  qtdPedidoSugerida?: number;
 }
 
 export interface BranchConfig {
