@@ -14,7 +14,141 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      branches: {
+        Row: {
+          cidade: string
+          created_at: string | null
+          id: string
+          local: string
+        }
+        Insert: {
+          cidade: string
+          created_at?: string | null
+          id?: string
+          local: string
+        }
+        Update: {
+          cidade?: string
+          created_at?: string | null
+          id?: string
+          local?: string
+        }
+        Relationships: []
+      }
+      movements: {
+        Row: {
+          created_at: string | null
+          date: string | null
+          from_location: string | null
+          id: string
+          notes: string | null
+          product_sku: string
+          quantity: number
+          to_location: string | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string | null
+          from_location?: string | null
+          id?: string
+          notes?: string | null
+          product_sku: string
+          quantity: number
+          to_location?: string | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string | null
+          from_location?: string | null
+          id?: string
+          notes?: string | null
+          product_sku?: string
+          quantity?: number
+          to_location?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          cidade: string | null
+          classe: string | null
+          cor: string | null
+          created_at: string | null
+          cv_demanda: number | null
+          demanda_media: number | null
+          demanda_std: number | null
+          estoque_max_sugerido: number | null
+          estoque_min_sugerido: number | null
+          estoque_seguranca: number | null
+          familia: string | null
+          id: string
+          local: string
+          ponto_pedido: number | null
+          produto: string
+          qtd_pedido_sugerida: number | null
+          sku: string
+          status: string | null
+          stock: number | null
+          subclasse: string | null
+          tamanho: string | null
+          updated_at: string | null
+          volatilidade: string | null
+        }
+        Insert: {
+          cidade?: string | null
+          classe?: string | null
+          cor?: string | null
+          created_at?: string | null
+          cv_demanda?: number | null
+          demanda_media?: number | null
+          demanda_std?: number | null
+          estoque_max_sugerido?: number | null
+          estoque_min_sugerido?: number | null
+          estoque_seguranca?: number | null
+          familia?: string | null
+          id?: string
+          local: string
+          ponto_pedido?: number | null
+          produto: string
+          qtd_pedido_sugerida?: number | null
+          sku: string
+          status?: string | null
+          stock?: number | null
+          subclasse?: string | null
+          tamanho?: string | null
+          updated_at?: string | null
+          volatilidade?: string | null
+        }
+        Update: {
+          cidade?: string | null
+          classe?: string | null
+          cor?: string | null
+          created_at?: string | null
+          cv_demanda?: number | null
+          demanda_media?: number | null
+          demanda_std?: number | null
+          estoque_max_sugerido?: number | null
+          estoque_min_sugerido?: number | null
+          estoque_seguranca?: number | null
+          familia?: string | null
+          id?: string
+          local?: string
+          ponto_pedido?: number | null
+          produto?: string
+          qtd_pedido_sugerida?: number | null
+          sku?: string
+          status?: string | null
+          stock?: number | null
+          subclasse?: string | null
+          tamanho?: string | null
+          updated_at?: string | null
+          volatilidade?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
