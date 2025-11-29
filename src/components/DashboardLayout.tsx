@@ -1,6 +1,8 @@
-import { LayoutDashboard, Package, TrendingUp, Building2, Settings, Upload } from "lucide-react";
+import { LayoutDashboard, Package, TrendingUp, Building2, Settings, Upload, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +17,7 @@ const navigation = [
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
+  const { signOut, user } = useAuth();
   
   return (
     <div className="flex h-screen bg-background">
@@ -58,14 +61,19 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </Link>
         </nav>
 
-        <div className="p-4 border-t border-sidebar-border">
-          <a
-            href="#"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-all duration-200"
+        <div className="p-4 border-t border-sidebar-border space-y-2">
+          <div className="flex items-center gap-3 px-4 py-2 text-sm text-sidebar-foreground">
+            <User className="h-4 w-4" />
+            <span className="truncate">{user?.email}</span>
+          </div>
+          <Button
+            variant="ghost"
+            onClick={signOut}
+            className="w-full justify-start gap-3 px-4 py-3 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
           >
-            <Settings className="h-5 w-5" />
-            Configurações
-          </a>
+            <LogOut className="h-5 w-5" />
+            Sair
+          </Button>
         </div>
       </div>
 
