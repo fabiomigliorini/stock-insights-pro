@@ -3,9 +3,11 @@ import { Product } from "@/lib/excelParser";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Badge } from "@/components/ui/badge";
+import { getMonthlyDataForSKU } from "@/lib/getMonthlyData";
+import { Loader2 } from "lucide-react";
 
 interface ProductAnalysisProps {
   product: Product | null;
@@ -19,6 +21,8 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
   const [selectedColor, setSelectedColor] = useState("todos");
   const [selectedSize, setSelectedSize] = useState("todos");
   const [selectedPeriod, setSelectedPeriod] = useState<"inicio" | "3anos" | "2anos" | "1ano" | "6meses">("1ano");
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // Get unique locations and colors for this product
   const locations = useMemo(() => {
@@ -60,39 +64,48 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
     });
   }, [product, allProducts, selectedLocation, selectedColor, selectedSize]);
 
-  // Mock data for charts - em produção, viriam do backend
-  const monthlyData = useMemo(() => {
-    if (!product || filteredProducts.length === 0) return [];
-    const avgDemanda = filteredProducts.reduce((sum, p) => sum + (p.demandaMedia || 0), 0) / filteredProducts.length;
-    const avgMin = filteredProducts.reduce((sum, p) => sum + (p.estoqueMinSugerido || p.min || 0), 0) / filteredProducts.length;
-    const avgMax = filteredProducts.reduce((sum, p) => sum + (p.estoqueMaxSugerido || p.max || 0), 0) / filteredProducts.length;
-    const avgSeguranca = filteredProducts.reduce((sum, p) => sum + (p.estoqueSeguranca || 0), 0) / filteredProducts.length;
-    const volatility = product.volatilidade === "Alta" ? 0.3 : product.volatilidade === "Media" ? 0.15 : 0.05;
+  // Load monthly data from database
+  useEffect(() => {
+    if (!product || !open) return;
     
-    // Determinar número de meses baseado no período
-    const monthsMap = {
-      "inicio": 36,
-      "3anos": 36,
-      "2anos": 24,
-      "1ano": 12,
-      "6meses": 6,
+    const loadMonthlyData = async () => {
+      setLoading(true);
+      try {
+        const data = await getMonthlyDataForSKU(
+          product.sku,
+          selectedLocation !== "todos" ? selectedLocation : undefined,
+          selectedColor !== "todos" ? selectedColor : undefined,
+          selectedSize !== "todos" ? selectedSize : undefined
+        );
+        
+        // Filter by period
+        const periodMap = {
+          "inicio": 999,
+          "3anos": 36,
+          "2anos": 24,
+          "1ano": 12,
+          "6meses": 6,
+        };
+        const monthsToShow = periodMap[selectedPeriod];
+        const filteredData = data.slice(-monthsToShow);
+        
+        setMonthlyData(filteredData.map(d => ({
+          month: d.mes,
+          vendas: d.vendas,
+          estoque: d.estoque,
+          min: d.min,
+          max: d.max,
+          seguranca: d.seguranca,
+        })));
+      } catch (error) {
+        console.error('Erro ao carregar dados mensais:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-    const numMonths = monthsMap[selectedPeriod];
-    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    
-    return Array.from({ length: numMonths }, (_, i) => {
-      const monthIndex = i % 12;
-      const year = Math.floor(i / 12);
-      return {
-        month: numMonths > 12 ? `${monthNames[monthIndex]}/${year + 1}` : monthNames[monthIndex],
-        vendas: Math.max(0, avgDemanda + (Math.random() - 0.5) * avgDemanda * volatility * 2),
-        estoque: avgMin,
-        min: avgMin,
-        max: avgMax,
-        seguranca: avgSeguranca,
-      };
-    });
-  }, [product, filteredProducts, selectedPeriod]);
+
+    loadMonthlyData();
+  }, [product, open, selectedLocation, selectedColor, selectedSize, selectedPeriod]);
 
   const branchData = useMemo(() => {
     if (!product || filteredProducts.length === 0) return [];
@@ -247,19 +260,26 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                     </span>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={180}>
-                  <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                    <Tooltip contentStyle={{ fontSize: 12 }} />
-                    <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                    <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" />
-                    <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Máx" />
-                    <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Mín" />
-                    <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={2} strokeDasharray="3 3" name="Segurança" />
-                  </LineChart>
-                </ResponsiveContainer>
+                {loading ? (
+                  <div className="flex items-center justify-center h-[180px]">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={180}>
+                    <LineChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip contentStyle={{ fontSize: 12 }} />
+                      <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                      <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" />
+                      <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" />
+                      <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Máx" />
+                      <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Mín" />
+                      <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={2} strokeDasharray="3 3" name="Segurança" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </Card>
 
               <Card className="p-4">
