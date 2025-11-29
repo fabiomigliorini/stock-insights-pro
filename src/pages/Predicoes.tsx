@@ -14,9 +14,6 @@ const Predicoes = () => {
     baixa: products.filter(p => p.volatilidade?.toLowerCase() === 'baixa').length,
   };
 
-  // Produtos que precisam reposição (estoque abaixo do ponto de pedido)
-  const needsReorder = products.filter(p => p.stock < (p.pontoPedido || p.reorderPoint));
-
   // Demanda total média
   const totalDemandaMedia = products.reduce((sum, p) => sum + (p.demandaMedia || 0), 0);
 
@@ -26,18 +23,19 @@ const Predicoes = () => {
     .sort((a, b) => (b.demandaMedia || 0) - (a.demandaMedia || 0))
     .slice(0, 10);
 
-  // Produtos críticos (alta volatilidade + estoque baixo)
-  const criticos = products.filter(p => 
-    p.volatilidade?.toLowerCase() === 'alta' && p.status === 'low'
-  );
+  // Produtos com maior CV de demanda (mais incertos)
+  const maiorCV = [...products]
+    .filter(p => p.cvDemanda)
+    .sort((a, b) => (b.cvDemanda || 0) - (a.cvDemanda || 0))
+    .slice(0, 10);
 
   return (
     <DashboardLayout>
       <div className="p-8 space-y-8 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Predições de Vendas</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Análise de Demanda</h1>
           <p className="text-muted-foreground">
-            Análise de demanda e sugestões de reposição baseadas em dados históricos
+            Parâmetros sugeridos e análise de volatilidade baseados em dados históricos
           </p>
         </div>
 
@@ -54,29 +52,31 @@ const Predicoes = () => {
 
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              <h3 className="font-semibold text-foreground">Precisam Reposição</h3>
-            </div>
-            <p className="text-3xl font-bold text-foreground">{needsReorder.length}</p>
-            <p className="text-sm text-muted-foreground">produtos abaixo do ponto de pedido</p>
-          </Card>
-
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="h-5 w-5 text-success" />
-              <h3 className="font-semibold text-foreground">Produtos Ativos</h3>
+              <h3 className="font-semibold text-foreground">Produtos Analisados</h3>
             </div>
             <p className="text-3xl font-bold text-foreground">{products.length}</p>
-            <p className="text-sm text-muted-foreground">SKUs cadastrados</p>
+            <p className="text-sm text-muted-foreground">SKUs + Locais</p>
           </Card>
 
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-2">
-              <TrendingDown className="h-5 w-5 text-destructive" />
-              <h3 className="font-semibold text-foreground">Críticos</h3>
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <h3 className="font-semibold text-foreground">Alta Volatilidade</h3>
             </div>
-            <p className="text-3xl font-bold text-foreground">{criticos.length}</p>
-            <p className="text-sm text-muted-foreground">alta volatilidade + baixo estoque</p>
+            <p className="text-3xl font-bold text-foreground">{byVolatilidade.alta}</p>
+            <p className="text-sm text-muted-foreground">produtos com demanda instável</p>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <TrendingDown className="h-5 w-5 text-warning" />
+              <h3 className="font-semibold text-foreground">Maior CV Demanda</h3>
+            </div>
+            <p className="text-3xl font-bold text-foreground">
+              {maiorCV.length > 0 ? maiorCV[0].cvDemanda?.toFixed(1) : '0'}%
+            </p>
+            <p className="text-sm text-muted-foreground">coeficiente de variação máximo</p>
           </Card>
         </div>
 
@@ -145,38 +145,39 @@ const Predicoes = () => {
           </div>
         </Card>
 
-        {/* Produtos Críticos */}
-        {criticos.length > 0 && (
-          <Card className="p-6 border-destructive/50">
-            <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              <h3 className="text-lg font-semibold text-foreground">
-                Produtos Críticos - Ação Urgente
-              </h3>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Produtos com alta volatilidade e estoque abaixo do mínimo
-            </p>
-            <div className="space-y-2">
-              {criticos.slice(0, 10).map((product) => (
-                <div key={product.id} className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+        {/* Top 10 Produtos por CV (Maior Incerteza) */}
+        <Card className="p-6 border-warning/50">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-5 w-5 text-warning" />
+            <h3 className="text-lg font-semibold text-foreground">
+              Top 10 Produtos com Maior Incerteza (CV Demanda)
+            </h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Produtos com maior coeficiente de variação na demanda - requerem mais atenção
+          </p>
+          <div className="space-y-2">
+            {maiorCV.map((product, index) => (
+              <div key={product.id} className="flex items-center justify-between p-3 bg-warning/10 rounded-lg border border-warning/20">
+                <div className="flex items-center gap-3">
+                  <span className="font-bold text-lg text-muted-foreground w-8">#{index + 1}</span>
                   <div>
                     <p className="font-medium text-foreground">{product.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {product.local} • SKU: {product.sku}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <Badge variant="destructive">Crítico</Badge>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Sugestão: pedir {product.qtdPedidoSugerida || 0} unidades
-                    </p>
-                  </div>
                 </div>
-              ))}
-            </div>
-          </Card>
-        )}
+                <div className="text-right">
+                  <Badge variant="warning">CV: {product.cvDemanda?.toFixed(1)}%</Badge>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Demanda: {product.demandaMedia?.toFixed(1)} ± {product.demandaStd?.toFixed(1)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     </DashboardLayout>
   );
