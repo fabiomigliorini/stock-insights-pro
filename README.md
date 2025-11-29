@@ -32,17 +32,6 @@ Acesse `http://localhost:8080`
 - `npm run lint` - Executa o linter
 - `npm run preview` - Preview do build
 
-## 📁 Estrutura Principal
-
-
-src/
-├── components/     # Componentes React
-├── pages/          # Páginas/rotas
-├── contexts/       # Estado global
-├── hooks/          # Custom hooks
-└── lib/            # Utilitários e lógica de negócio
-```
-
 ## 🎯 Funcionalidades
 
 - *Importação de Excel* - Upload de base de dados
