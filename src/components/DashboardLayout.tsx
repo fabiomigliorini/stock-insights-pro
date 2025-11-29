@@ -12,6 +12,7 @@ const navigation = [
   { name: "Overview", icon: LayoutDashboard, href: "/", current: true },
   { name: "Classes", icon: Layers, href: "/classes", current: false },
   { name: "Predições", icon: TrendingUp, href: "/predicoes", current: false },
+  { name: "Transferências", icon: Package, href: "/transferencias", current: false },
   { name: "Filiais", icon: Building2, href: "/filiais", current: false },
 ];
 
