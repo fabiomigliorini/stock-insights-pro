@@ -3,7 +3,7 @@ import { BranchesOverview } from "@/components/BranchesOverview";
 import { TransferSuggestions } from "@/components/TransferSuggestions";
 import { Card } from "@/components/ui/card";
 import { useData } from "@/contexts/DataContext";
-import { Building2, Package, TrendingUp, TrendingDown } from "lucide-react";
+import { Building2, Package, TrendingUp, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const Filiais = () => {
@@ -11,7 +11,7 @@ const Filiais = () => {
 
   // Calcular estatísticas por filial
   const branchStats = branches.map(branch => {
-    const branchProducts = products.filter(p => p.local === branch.name);
+    const branchProducts = products.filter(p => p.local === branch.local);
     const lowStock = branchProducts.filter(p => p.status === 'low').length;
     const highStock = branchProducts.filter(p => p.status === 'high').length;
     const avgDemanda = branchProducts.reduce((sum, p) => sum + (p.demandaMedia || 0), 0) / (branchProducts.length || 1);
@@ -24,14 +24,6 @@ const Filiais = () => {
       avgDemanda,
     };
   });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "low": return "destructive";
-      case "high": return "warning";
-      default: return "success";
-    }
-  };
 
   return (
     <DashboardLayout>
@@ -47,61 +39,55 @@ const Filiais = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {branchStats.map((branch) => (
-            <Card key={branch.name} className="p-6">
+            <Card key={`${branch.local}-${branch.cidade}`} className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-3 bg-primary/10 rounded-lg">
                   <Building2 className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground text-lg">{branch.name}</h3>
-                  <Badge variant={getStatusColor(branch.status) as any} className="mt-1">
-                    {branch.status === 'low' ? 'Baixo' : branch.status === 'high' ? 'Alto' : 'Normal'}
-                  </Badge>
+                  <h3 className="font-semibold text-foreground text-lg">{branch.local}</h3>
+                  {branch.cidade && (
+                    <p className="text-sm text-muted-foreground">{branch.cidade}</p>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">SKUs</span>
+                    <span className="text-sm text-muted-foreground">Total de Produtos</span>
                   </div>
                   <span className="font-semibold text-foreground">{branch.totalProducts}</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Demanda Média</span>
-                  </div>
-                  <span className="font-semibold text-foreground">{branch.avgDemanda.toFixed(1)}</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <TrendingDown className="h-4 w-4 text-destructive" />
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
                     <span className="text-sm text-muted-foreground">Estoque Baixo</span>
                   </div>
-                  <span className="font-semibold text-destructive">{branch.lowStock}</span>
+                  <Badge variant={branch.lowStock > 0 ? "destructive" : "success"}>
+                    {branch.lowStock}
+                  </Badge>
                 </div>
 
-                {branch.highStock > 0 && (
-                  <div className="flex items-center justify-between p-3 bg-warning/10 rounded-lg border border-warning/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-warning" />
                     <span className="text-sm text-muted-foreground">Estoque Alto</span>
-                    <span className="font-semibold text-warning">{branch.highStock}</span>
                   </div>
-                )}
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Capacidade</span>
-                  <span className="font-medium text-foreground">
-                    {branch.stock.toLocaleString()} / {branch.capacity.toLocaleString()}
-                  </span>
+                  <Badge variant={branch.highStock > 0 ? "warning" : "success"}>
+                    {branch.highStock}
+                  </Badge>
                 </div>
-                <div className="mt-2 text-xs text-muted-foreground text-right">
-                  {((branch.stock / branch.capacity) * 100).toFixed(1)}% utilizado
+
+                <div className="pt-3 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Demanda Média</span>
+                    <span className="font-semibold text-foreground">
+                      {branch.avgDemanda.toFixed(1)} un/período
+                    </span>
+                  </div>
                 </div>
               </div>
             </Card>

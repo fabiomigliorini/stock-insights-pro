@@ -35,117 +35,75 @@ export type Database = {
         }
         Relationships: []
       }
-      movements: {
+      monthly_sales: {
         Row: {
-          created_at: string | null
-          date: string | null
-          from_location: string | null
-          id: string
-          notes: string | null
-          product_sku: string
-          quantity: number
-          to_location: string | null
-          type: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          date?: string | null
-          from_location?: string | null
-          id?: string
-          notes?: string | null
-          product_sku: string
-          quantity: number
-          to_location?: string | null
-          type?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          date?: string | null
-          from_location?: string | null
-          id?: string
-          notes?: string | null
-          product_sku?: string
-          quantity?: number
-          to_location?: string | null
-          type?: string | null
-        }
-        Relationships: []
-      }
-      products: {
-        Row: {
+          ano: number
           cidade: string | null
           classe: string | null
           cor: string | null
           created_at: string | null
-          cv_demanda: number | null
-          demanda_media: number | null
-          demanda_std: number | null
-          estoque_max_sugerido: number | null
-          estoque_min_sugerido: number | null
-          estoque_seguranca: number | null
+          estoque_final_mes: number | null
+          estoque_inicio_mes: number | null
+          estoque_maximo_mes: number | null
+          estoque_minimo_mes: number | null
+          estoque_seguranca_mes: number | null
           familia: string | null
           id: string
           local: string
-          ponto_pedido: number | null
+          mes: number
+          ponto_pedido_mes: number | null
           produto: string
-          qtd_pedido_sugerida: number | null
+          qtde_reposicao: number | null
+          qtde_vendida: number | null
           sku: string
-          status: string | null
-          stock: number | null
           subclasse: string | null
           tamanho: string | null
-          updated_at: string | null
-          volatilidade: string | null
         }
         Insert: {
+          ano: number
           cidade?: string | null
           classe?: string | null
           cor?: string | null
           created_at?: string | null
-          cv_demanda?: number | null
-          demanda_media?: number | null
-          demanda_std?: number | null
-          estoque_max_sugerido?: number | null
-          estoque_min_sugerido?: number | null
-          estoque_seguranca?: number | null
+          estoque_final_mes?: number | null
+          estoque_inicio_mes?: number | null
+          estoque_maximo_mes?: number | null
+          estoque_minimo_mes?: number | null
+          estoque_seguranca_mes?: number | null
           familia?: string | null
           id?: string
           local: string
-          ponto_pedido?: number | null
+          mes: number
+          ponto_pedido_mes?: number | null
           produto: string
-          qtd_pedido_sugerida?: number | null
+          qtde_reposicao?: number | null
+          qtde_vendida?: number | null
           sku: string
-          status?: string | null
-          stock?: number | null
           subclasse?: string | null
           tamanho?: string | null
-          updated_at?: string | null
-          volatilidade?: string | null
         }
         Update: {
+          ano?: number
           cidade?: string | null
           classe?: string | null
           cor?: string | null
           created_at?: string | null
-          cv_demanda?: number | null
-          demanda_media?: number | null
-          demanda_std?: number | null
-          estoque_max_sugerido?: number | null
-          estoque_min_sugerido?: number | null
-          estoque_seguranca?: number | null
+          estoque_final_mes?: number | null
+          estoque_inicio_mes?: number | null
+          estoque_maximo_mes?: number | null
+          estoque_minimo_mes?: number | null
+          estoque_seguranca_mes?: number | null
           familia?: string | null
           id?: string
           local?: string
-          ponto_pedido?: number | null
+          mes?: number
+          ponto_pedido_mes?: number | null
           produto?: string
-          qtd_pedido_sugerida?: number | null
+          qtde_reposicao?: number | null
+          qtde_vendida?: number | null
           sku?: string
-          status?: string | null
-          stock?: number | null
           subclasse?: string | null
           tamanho?: string | null
-          updated_at?: string | null
-          volatilidade?: string | null
         }
         Relationships: []
       }
@@ -172,7 +130,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      product_stats: {
+        Row: {
+          cidade: string | null
+          classe: string | null
+          cor: string | null
+          cv_demanda: number | null
+          demanda_media: number | null
+          demanda_std: number | null
+          estoque_atual: number | null
+          estoque_maximo: number | null
+          estoque_minimo: number | null
+          estoque_seguranca: number | null
+          familia: string | null
+          local: string | null
+          ponto_pedido: number | null
+          produto: string | null
+          sku: string | null
+          subclasse: string | null
+          tamanho: string | null
+          volatilidade: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

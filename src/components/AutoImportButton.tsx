@@ -2,36 +2,31 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Database, Loader2 } from "lucide-react";
-import { importRealData } from "@/lib/importRealData";
+import { importHistoricalData } from "@/lib/importHistoricalData";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
 import { toast } from "sonner";
 
 export const AutoImportButton = () => {
   const [loading, setLoading] = useState(false);
-  const { setProducts, setBranches, setMovements } = useData();
+  const { setMonthlySales } = useData();
   const navigate = useNavigate();
 
   const handleImport = async () => {
     setLoading(true);
 
-    const importResult = await importRealData();
+    const result = await importHistoricalData();
     
-    if (importResult.success && importResult.data) {
-      if (importResult.data.products) {
-        setProducts(importResult.data.products);
-        toast.success(`${importResult.data.products.length} produtos importados!`);
-      }
-      if (importResult.data.branches) {
-        setBranches(importResult.data.branches);
-        toast.success(`${importResult.data.branches.length} locais identificados!`);
-      }
-
+    if (result.success && result.data) {
+      if (result.data.monthlySales) setMonthlySales(result.data.monthlySales);
+      
+      toast.success(`${result.data.monthlySales?.length || 0} registros mensais importados`);
+      
       setTimeout(() => {
         navigate("/");
       }, 1000);
     } else {
-      toast.error(importResult.message);
+      toast.error(result.error || 'Erro ao carregar dados');
     }
 
     setLoading(false);
@@ -45,11 +40,11 @@ export const AutoImportButton = () => {
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-foreground mb-2">
-            Importação Rápida - Dados de Exemplo
+            Importação Rápida - Dados Históricos
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Carregue automaticamente os dados de exemplo (Modelo_Predicao_Estoque.xlsx) com
-            produtos, filiais, configurações de estoque e histórico de movimentações.
+            Carregue automaticamente os dados históricos de vendas e estoque (2023-2025) com
+            informações mensais de todos os produtos e locais.
           </p>
 
           <Button onClick={handleImport} disabled={loading}>
@@ -61,7 +56,7 @@ export const AutoImportButton = () => {
             ) : (
               <>
                 <Database className="h-4 w-4 mr-2" />
-                Importar Dados de Exemplo
+                Importar Dados Históricos
               </>
             )}
           </Button>

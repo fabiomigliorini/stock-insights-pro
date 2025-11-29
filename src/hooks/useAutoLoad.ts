@@ -1,22 +1,21 @@
 import { useEffect, useState } from "react";
 import { useData } from "@/contexts/DataContext";
-import { importRealData } from "@/lib/importRealData";
+import { importHistoricalData } from "@/lib/importHistoricalData";
 
 export const useAutoLoad = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { products, setProducts, setBranches } = useData();
+  const { monthlySales, setMonthlySales } = useData();
 
   useEffect(() => {
-    // Se já tem produtos, não carrega novamente
-    if (products.length > 0) return;
+    // Se já tem dados, não carrega novamente
+    if (monthlySales.length > 0) return;
 
     const loadData = async () => {
       setIsLoading(true);
-      const result = await importRealData();
+      const result = await importHistoricalData();
       
       if (result.success && result.data) {
-        if (result.data.products) setProducts(result.data.products);
-        if (result.data.branches) setBranches(result.data.branches);
+        if (result.data.monthlySales) setMonthlySales(result.data.monthlySales);
       }
       
       setIsLoading(false);
