@@ -17,6 +17,7 @@ interface ProductAnalysisProps {
 export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: ProductAnalysisProps) => {
   const [selectedLocation, setSelectedLocation] = useState("todos");
   const [selectedColor, setSelectedColor] = useState("todos");
+  const [selectedSize, setSelectedSize] = useState("todos");
 
   // Get unique locations and colors for this product
   const locations = useMemo(() => {
@@ -37,26 +38,49 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
     return ["todos", ...cols];
   }, [product, allProducts]);
 
+  const sizes = useMemo(() => {
+    if (!product) return [];
+    const szs = allProducts
+      .filter(p => p.sku === product.sku || p.name === product.name)
+      .map(p => p.tamanho)
+      .filter((v, i, a) => v && a.indexOf(v) === i);
+    return ["todos", ...szs];
+  }, [product, allProducts]);
+
+  // Filter products based on selected filters
+  const filteredProducts = useMemo(() => {
+    if (!product) return [];
+    return allProducts.filter(p => {
+      const matchesSKU = p.sku === product.sku || p.name === product.name;
+      const matchesLocation = selectedLocation === "todos" || p.local === selectedLocation;
+      const matchesColor = selectedColor === "todos" || p.cor === selectedColor;
+      const matchesSize = selectedSize === "todos" || p.tamanho === selectedSize;
+      return matchesSKU && matchesLocation && matchesColor && matchesSize;
+    });
+  }, [product, allProducts, selectedLocation, selectedColor, selectedSize]);
+
   // Mock data for charts - em produção, viriam do backend
   const monthlyData = useMemo(() => {
-    if (!product) return [];
-    const demanda = product.demandaMedia || 50;
+    if (!product || filteredProducts.length === 0) return [];
+    const avgDemanda = filteredProducts.reduce((sum, p) => sum + (p.demandaMedia || 0), 0) / filteredProducts.length;
+    const avgMin = filteredProducts.reduce((sum, p) => sum + (p.estoqueMinSugerido || p.min || 0), 0) / filteredProducts.length;
+    const avgMax = filteredProducts.reduce((sum, p) => sum + (p.estoqueMaxSugerido || p.max || 0), 0) / filteredProducts.length;
     const volatility = product.volatilidade === "Alta" ? 0.3 : product.volatilidade === "Media" ? 0.15 : 0.05;
     
     return Array.from({ length: 12 }, (_, i) => ({
       month: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"][i],
-      vendas: Math.max(0, demanda + (Math.random() - 0.5) * demanda * volatility * 2),
-      estoque: product.estoqueMinSugerido || product.min || 100,
-      min: product.estoqueMinSugerido || product.min || 50,
-      max: product.estoqueMaxSugerido || product.max || 200,
+      vendas: Math.max(0, avgDemanda + (Math.random() - 0.5) * avgDemanda * volatility * 2),
+      estoque: avgMin,
+      min: avgMin,
+      max: avgMax,
     }));
-  }, [product]);
+  }, [product, filteredProducts]);
 
   const branchData = useMemo(() => {
-    if (!product) return [];
+    if (!product || filteredProducts.length === 0) return [];
     
-    const branches = allProducts
-      .filter(p => (p.sku === product.sku || p.name === product.name) && p.local)
+    const branches = filteredProducts
+      .filter(p => p.local)
       .reduce((acc, p) => {
         const local = p.local || "Outros";
         if (!acc[local]) {
@@ -72,7 +96,7 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
       vendas: data.vendas,
       estoque: data.estoque,
     }));
-  }, [product, allProducts]);
+  }, [filteredProducts]);
 
   const branchDistribution = useMemo(() => {
     if (!product) return [];
@@ -86,29 +110,20 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
   }, [branchData]);
 
   const recommendationData = useMemo(() => {
-    if (!product) return [];
+    if (!product || filteredProducts.length === 0) return [];
     
-    const demanda = product.demandaMedia || 50;
-    const estoqueAtual = product.estoqueMinSugerido || product.min || 100;
-    const diff = estoqueAtual - demanda;
+    const totalDemanda = filteredProducts.reduce((sum, p) => sum + (p.demandaMedia || 0), 0);
+    const totalEstoque = filteredProducts.reduce((sum, p) => sum + (p.estoqueMinSugerido || p.min || 0), 0);
+    const diff = totalEstoque - totalDemanda;
     
     return [{
       name: "Status",
-      recomendado: demanda,
-      atual: estoqueAtual,
+      recomendado: totalDemanda,
+      atual: totalEstoque,
       diferenca: diff,
     }];
-  }, [product]);
+  }, [filteredProducts]);
 
-  const seasonalData = useMemo(() => {
-    if (!product) return [];
-    const demanda = product.demandaMedia || 50;
-    
-    return Array.from({ length: 12 }, (_, i) => ({
-      month: ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"][i],
-      vendas: demanda * (1 + Math.sin(i / 12 * Math.PI * 2) * 0.3),
-    }));
-  }, [product]);
 
   if (!product) return null;
 
@@ -143,7 +158,7 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
 
             {colors.length > 1 && (
               <div>
-                <h3 className="text-sm font-medium mb-3">Variações Ativas</h3>
+                <h3 className="text-sm font-medium mb-3">Cor</h3>
                 <RadioGroup value={selectedColor} onValueChange={setSelectedColor}>
                   {colors.map((cor) => (
                     <div key={cor} className="flex items-center space-x-2 mb-2">
@@ -156,11 +171,27 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                 </RadioGroup>
               </div>
             )}
+
+            {sizes.length > 1 && (
+              <div>
+                <h3 className="text-sm font-medium mb-3">Tamanho</h3>
+                <RadioGroup value={selectedSize} onValueChange={setSelectedSize}>
+                  {sizes.map((tam) => (
+                    <div key={tam} className="flex items-center space-x-2 mb-2">
+                      <RadioGroupItem value={tam} id={`tam-${tam}`} />
+                      <Label htmlFor={`tam-${tam}`} className="text-sm cursor-pointer capitalize">
+                        {tam}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
           </div>
 
           {/* Main Content Area */}
           <div className="flex-1 space-y-6">
-            {/* First Row: Monthly Sales + Recommendation + Seasonal */}
+            {/* First Row: Monthly Sales + Recommendation */}
             <div className="grid grid-cols-3 gap-4">
               <Card className="p-4 col-span-2">
                 <div className="mb-4">
@@ -205,20 +236,6 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                 </div>
               </Card>
             </div>
-
-            {/* Seasonal Sales */}
-            <Card className="p-4">
-              <h3 className="text-sm font-semibold mb-4">Venda Volta às Aulas</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={seasonalData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ fontSize: 12 }} />
-                  <Area type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" fill="hsl(var(--chart-1))" fillOpacity={0.6} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </Card>
 
             {/* Second Row: Branch Sales + Distribution */}
             <div className="grid grid-cols-2 gap-4">
