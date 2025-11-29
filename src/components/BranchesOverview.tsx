@@ -1,15 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-
-const branches = [
-  { name: "Filial Centro", stock: 850, capacity: 1000, status: "ok" },
-  { name: "Filial Norte", stock: 320, capacity: 1000, status: "low" },
-  { name: "Filial Sul", stock: 950, capacity: 1000, status: "high" },
-  { name: "Filial Oeste", stock: 680, capacity: 1000, status: "ok" },
-];
+import { dataStore } from "@/lib/dataStore";
 
 export const BranchesOverview = () => {
+  const branches = dataStore.getBranches();
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case "low":

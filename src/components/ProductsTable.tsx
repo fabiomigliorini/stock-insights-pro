@@ -8,16 +8,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
-const products = [
-  { id: 1, name: "Camiseta Básica Branca", sku: "CAM-001", stock: 45, min: 50, max: 200, status: "low" },
-  { id: 2, name: "Calça Jeans Slim", sku: "CAL-002", stock: 120, min: 30, max: 150, status: "ok" },
-  { id: 3, name: "Tênis Esportivo", sku: "TEN-003", stock: 85, min: 40, max: 100, status: "high" },
-  { id: 4, name: "Vestido Floral", sku: "VES-004", stock: 65, min: 30, max: 80, status: "ok" },
-  { id: 5, name: "Jaqueta Jeans", sku: "JAQ-005", stock: 25, min: 40, max: 120, status: "low" },
-];
+import { dataStore } from "@/lib/dataStore";
 
 export const ProductsTable = () => {
+  const products = dataStore.getProducts();
+  
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "low":
