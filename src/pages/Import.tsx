@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ExcelUpload } from "@/components/ExcelUpload";
+import { AutoImportButton } from "@/components/AutoImportButton";
 import { useNavigate } from "react-router-dom";
 import { dataStore } from "@/lib/dataStore";
 import { Product, BranchConfig, Movement } from "@/lib/excelParser";
@@ -57,6 +58,8 @@ const Import = () => {
           </TabsList>
 
           <TabsContent value="upload" className="space-y-6">
+            <AutoImportButton />
+            
             <ExcelUpload onDataImported={handleDataImported} />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
