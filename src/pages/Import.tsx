@@ -72,16 +72,21 @@ const Import = () => {
             <SmartExcelUpload onDataImported={handleDataImported} />
 
             <Card className="p-6 bg-muted/50">
-              <h4 className="font-semibold text-foreground mb-3">✨ Importação Inteligente</h4>
+              <h4 className="font-semibold text-foreground mb-3">✨ Estrutura da Sua Planilha</h4>
               <p className="text-sm text-muted-foreground mb-3">
-                O sistema detecta automaticamente as colunas da sua planilha, independente dos nomes usados.
+                O sistema reconhece automaticamente os campos da sua planilha BLW:
               </p>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>• Detecta produtos por: SKU, Código, Produto, Descrição, Nome</p>
-                <p>• Detecta estoques por: Estoque, Saldo, Quantidade, Estoque Atual</p>
-                <p>• Detecta limites por: Mínimo, Máximo, Min, Max</p>
-                <p>• Detecta filiais por: Filial, Loja, Unidade, Nome</p>
-                <p>• Detecta movimentações por: Data, Quantidade, Tipo</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-muted-foreground">
+                <div>• SKU, Produto</div>
+                <div>• Família, Classe, Subclasse</div>
+                <div>• Cor, Tamanho</div>
+                <div>• Local, Cidade</div>
+                <div>• Demanda Média/Std</div>
+                <div>• CV Demanda, Volatilidade</div>
+                <div>• Estoque Segurança</div>
+                <div>• Estoque Min/Max Sugerido</div>
+                <div>• Ponto Pedido</div>
+                <div>• Qtd Pedido Sugerida</div>
               </div>
             </Card>
           </TabsContent>

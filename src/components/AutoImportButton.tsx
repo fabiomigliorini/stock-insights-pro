@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Database, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
-import { importPredictionData } from "@/lib/importPredictionData";
-import { useData } from "@/contexts/DataContext";
+import { Database, Loader2 } from "lucide-react";
+import { importRealData } from "@/lib/importRealData";
 import { useNavigate } from "react-router-dom";
+import { useData } from "@/contexts/DataContext";
 import { toast } from "sonner";
 
 export const AutoImportButton = () => {
@@ -15,7 +15,7 @@ export const AutoImportButton = () => {
   const handleImport = async () => {
     setLoading(true);
 
-    const importResult = await importPredictionData();
+    const importResult = await importRealData();
     
     if (importResult.success && importResult.data) {
       if (importResult.data.products) {
@@ -24,11 +24,7 @@ export const AutoImportButton = () => {
       }
       if (importResult.data.branches) {
         setBranches(importResult.data.branches);
-        toast.success(`${importResult.data.branches.length} filiais importadas!`);
-      }
-      if (importResult.data.movements) {
-        setMovements(importResult.data.movements);
-        toast.success(`${importResult.data.movements.length} movimentações importadas!`);
+        toast.success(`${importResult.data.branches.length} locais identificados!`);
       }
 
       setTimeout(() => {
