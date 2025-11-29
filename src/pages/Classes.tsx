@@ -4,10 +4,13 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Search } from "lucide-react";
+import { Search, BarChart3 } from "lucide-react";
+import { ProductAnalysis } from "@/components/ProductAnalysis";
+import { Product } from "@/lib/excelParser";
 
 export default function Classes() {
   const { products } = useData();
@@ -18,6 +21,8 @@ export default function Classes() {
   const [selectedSize, setSelectedSize] = useState("todos");
   const [selectedFamily, setSelectedFamily] = useState("todos");
   const [selectedPeriod, setSelectedPeriod] = useState<"inicio" | "3anos" | "2anos" | "1ano" | "6meses">("1ano");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
 
   // Reset filters when class changes
   useEffect(() => {
@@ -497,6 +502,7 @@ export default function Classes() {
                           <th className="p-2 font-semibold text-right">Estoque</th>
                           <th className="p-2 font-semibold text-right">Demanda</th>
                           <th className="p-2 font-semibold">Volatilidade</th>
+                          <th className="p-2 font-semibold text-center">Análise</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -522,6 +528,18 @@ export default function Classes() {
                                 {product.volatilidade || "Baixa"}
                               </Badge>
                             </td>
+                            <td className="p-2 text-center">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedProduct(product);
+                                  setAnalysisOpen(true);
+                                }}
+                              >
+                                <BarChart3 className="h-4 w-4" />
+                              </Button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -532,6 +550,13 @@ export default function Classes() {
             )}
           </div>
         </div>
+
+        <ProductAnalysis
+          product={selectedProduct}
+          allProducts={products}
+          open={analysisOpen}
+          onOpenChange={setAnalysisOpen}
+        />
       </div>
     </DashboardLayout>
   );
