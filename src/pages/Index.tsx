@@ -5,8 +5,12 @@ import { BranchesOverview } from "@/components/BranchesOverview";
 import { TransferSuggestions } from "@/components/TransferSuggestions";
 import { ProductsTable } from "@/components/ProductsTable";
 import { Package, TrendingDown, DollarSign, AlertTriangle } from "lucide-react";
+import { dataStore } from "@/lib/dataStore";
 
 const Index = () => {
+  const totalStock = dataStore.getTotalStock();
+  const lowStockCount = dataStore.getLowStockCount();
+  
   return (
     <DashboardLayout>
       <div className="p-8 space-y-8 animate-in fade-in duration-500">
@@ -22,7 +26,7 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <KPICard
             title="Estoque Total"
-            value="2.800"
+            value={totalStock.toLocaleString('pt-BR')}
             change="+5.2% vs. mês anterior"
             changeType="positive"
             icon={Package}
@@ -30,9 +34,9 @@ const Index = () => {
           />
           <KPICard
             title="Itens Abaixo do Mínimo"
-            value="12"
+            value={lowStockCount}
             change="Atenção necessária"
-            changeType="negative"
+            changeType={lowStockCount > 0 ? "negative" : "positive"}
             icon={AlertTriangle}
             iconColor="text-destructive"
           />

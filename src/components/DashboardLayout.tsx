@@ -1,18 +1,21 @@
-import { LayoutDashboard, Package, TrendingUp, Building2, Settings } from "lucide-react";
+import { LayoutDashboard, Package, TrendingUp, Building2, Settings, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link, useLocation } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const navigation = [
-  { name: "Overview", icon: LayoutDashboard, href: "#", current: true },
+  { name: "Overview", icon: LayoutDashboard, href: "/", current: true },
   { name: "Produtos", icon: Package, href: "#", current: false },
   { name: "Predições", icon: TrendingUp, href: "#", current: false },
   { name: "Filiais", icon: Building2, href: "#", current: false },
 ];
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  const location = useLocation();
+  
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
@@ -26,20 +29,33 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         
         <nav className="flex-1 p-4 space-y-1">
           {navigation.map((item) => (
-            <a
+            <Link
               key={item.name}
-              href={item.href}
+              to={item.href}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                item.current
+                location.pathname === item.href
                   ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
                   : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
               )}
             >
               <item.icon className="h-5 w-5" />
               {item.name}
-            </a>
+            </Link>
           ))}
+          
+          <Link
+            to="/import"
+            className={cn(
+              "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 mt-4 border border-sidebar-border",
+              location.pathname === "/import"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                : "text-sidebar-foreground hover:bg-sidebar-primary/10 hover:text-sidebar-primary-foreground hover:border-sidebar-primary"
+            )}
+          >
+            <Upload className="h-5 w-5" />
+            Importar Dados
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-sidebar-border">
