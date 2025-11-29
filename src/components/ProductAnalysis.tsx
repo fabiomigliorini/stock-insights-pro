@@ -279,7 +279,7 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
             {/* Product Details Summary */}
             <Card className="p-4">
               <h3 className="text-sm font-semibold mb-4">Detalhes do Produto</h3>
-              <div className="grid grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-4 gap-4 text-sm mb-4">
                 <div>
                   <p className="text-muted-foreground">Família</p>
                   <p className="font-medium">{product.familia || '-'}</p>
@@ -297,6 +297,24 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                   <Badge variant={product.volatilidade === "Alta" ? "destructive" : product.volatilidade === "Media" ? "warning" : "success"}>
                     {product.volatilidade || '-'}
                   </Badge>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-4 text-sm pt-4 border-t">
+                <div>
+                  <p className="text-muted-foreground">Estoque Mínimo</p>
+                  <p className="font-medium">{product.estoqueMinSugerido?.toFixed(0) || product.min?.toFixed(0) || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Estoque Máximo</p>
+                  <p className="font-medium">{product.estoqueMaxSugerido?.toFixed(0) || product.max?.toFixed(0) || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Estoque de Segurança</p>
+                  <p className="font-medium">{product.estoqueSeguranca?.toFixed(0) || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Ponto de Pedido</p>
+                  <p className="font-medium">{product.pontoPedido?.toFixed(0) || '-'}</p>
                 </div>
               </div>
             </Card>
