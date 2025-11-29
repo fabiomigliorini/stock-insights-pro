@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { SmartExcelUpload } from "@/components/SmartExcelUpload";
+import { HistoricalExcelUpload } from "@/components/HistoricalExcelUpload";
 import { AutoImportButton } from "@/components/AutoImportButton";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
@@ -7,16 +7,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Upload, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { importHistoricalData } from "@/lib/importHistoricalData";
+import { MonthlySale } from "@/lib/importHistoricalData";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Import = () => {
   const navigate = useNavigate();
   const { setMonthlySales } = useData();
 
-  const handleDataImported = async (data: any) => {
-    // For now, support the auto-import button only
-    toast.info("Use o botão de Importação Rápida para carregar dados históricos");
+  const handleDataImported = async (data: MonthlySale[]) => {
+    if (data && data.length > 0) {
+      await setMonthlySales(data);
+      toast.success(`${data.length} registros importados com sucesso!`);
+      
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+    }
   };
 
   return (
@@ -47,6 +53,17 @@ const Import = () => {
 
           <TabsContent value="upload" className="space-y-6">
             <AutoImportButton />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Ou</span>
+              </div>
+            </div>
+
+            <HistoricalExcelUpload onDataImported={handleDataImported} />
 
             <Card className="p-6 bg-muted/50">
               <h4 className="font-semibold text-foreground mb-3">✨ Estrutura dos Dados Históricos</h4>
