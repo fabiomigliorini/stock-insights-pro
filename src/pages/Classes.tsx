@@ -16,6 +16,7 @@ export default function Classes() {
   const [selectedLocation, setSelectedLocation] = useState("todos");
   const [selectedColor, setSelectedColor] = useState("todos");
   const [selectedSize, setSelectedSize] = useState("todos");
+  const [selectedFamily, setSelectedFamily] = useState("todos");
   const [selectedPeriod, setSelectedPeriod] = useState<"inicio" | "3anos" | "2anos" | "1ano" | "6meses">("1ano");
 
   // Reset filters when class changes
@@ -23,6 +24,7 @@ export default function Classes() {
     setSelectedLocation("todos");
     setSelectedColor("todos");
     setSelectedSize("todos");
+    setSelectedFamily("todos");
   }, [selectedClass]);
 
   // Get all unique classes
@@ -65,7 +67,14 @@ export default function Classes() {
     return ["todos", ...szs];
   }, [classProducts, selectedClass]);
 
-  // Filter products by location, color, and size
+  // Get unique families for the selected class
+  const families = useMemo(() => {
+    if (!selectedClass) return ["todos"];
+    const fams = [...new Set(classProducts.map(p => p.familia).filter(Boolean))];
+    return ["todos", ...fams];
+  }, [classProducts, selectedClass]);
+
+  // Filter products by location, color, size, and family
   const filteredProducts = useMemo(() => {
     let filtered = classProducts;
     if (selectedLocation !== "todos") {
@@ -77,8 +86,11 @@ export default function Classes() {
     if (selectedSize !== "todos") {
       filtered = filtered.filter(p => p.tamanho === selectedSize);
     }
+    if (selectedFamily !== "todos") {
+      filtered = filtered.filter(p => p.familia === selectedFamily);
+    }
     return filtered;
-  }, [classProducts, selectedLocation, selectedColor, selectedSize]);
+  }, [classProducts, selectedLocation, selectedColor, selectedSize, selectedFamily]);
 
   // Calculate aggregated stats
   const classStats = useMemo(() => {
@@ -283,7 +295,7 @@ export default function Classes() {
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-6">
+                  <div className="grid grid-cols-4 gap-6">
                     <div>
                       <h3 className="text-sm font-medium mb-2">Local de Estoque</h3>
                       <RadioGroup value={selectedLocation} onValueChange={setSelectedLocation} className="flex flex-wrap gap-3">
@@ -325,6 +337,20 @@ export default function Classes() {
                         ))}
                       </RadioGroup>
                     </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium mb-2">Família</h3>
+                      <RadioGroup value={selectedFamily} onValueChange={setSelectedFamily} className="flex flex-wrap gap-3">
+                        {families.map((fam) => (
+                          <div key={fam} className="flex items-center space-x-2">
+                            <RadioGroupItem value={fam} id={`fam-${fam}`} />
+                            <Label htmlFor={`fam-${fam}`} className="text-sm cursor-pointer capitalize">
+                              {fam}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
                   </div>
                 </Card>
 
@@ -357,80 +383,61 @@ export default function Classes() {
                   </Card>
                 </div>
 
-                {/* First Row: Monthly Sales + Recommendation */}
-                <div className="grid grid-cols-3 gap-4">
-                  <Card className="p-4 col-span-2">
-                    <div className="mb-4">
-                      <h3 className="text-sm font-semibold mb-2">Venda Mensal</h3>
-                      <div className="flex gap-3 text-xs mb-3">
-                        <span 
-                          onClick={() => setSelectedPeriod("inicio")}
-                          className={`cursor-pointer transition-colors ${selectedPeriod === "inicio" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
-                        >
-                          DESDE INÍCIO
-                        </span>
-                        <span 
-                          onClick={() => setSelectedPeriod("3anos")}
-                          className={`cursor-pointer transition-colors ${selectedPeriod === "3anos" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
-                        >
-                          3 ANOS
-                        </span>
-                        <span 
-                          onClick={() => setSelectedPeriod("2anos")}
-                          className={`cursor-pointer transition-colors ${selectedPeriod === "2anos" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
-                        >
-                          2 ANOS
-                        </span>
-                        <span 
-                          onClick={() => setSelectedPeriod("1ano")}
-                          className={`cursor-pointer transition-colors ${selectedPeriod === "1ano" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
-                        >
-                          1 ANO
-                        </span>
-                        <span 
-                          onClick={() => setSelectedPeriod("6meses")}
-                          className={`cursor-pointer transition-colors ${selectedPeriod === "6meses" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
-                        >
-                          6 MESES
-                        </span>
-                      </div>
+                {/* Monthly Sales Chart */}
+                <Card className="p-4">
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold mb-2">Venda Mensal</h3>
+                    <div className="flex gap-3 text-xs mb-3">
+                      <span 
+                        onClick={() => setSelectedPeriod("inicio")}
+                        className={`cursor-pointer transition-colors ${selectedPeriod === "inicio" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        DESDE INÍCIO
+                      </span>
+                      <span 
+                        onClick={() => setSelectedPeriod("3anos")}
+                        className={`cursor-pointer transition-colors ${selectedPeriod === "3anos" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        3 ANOS
+                      </span>
+                      <span 
+                        onClick={() => setSelectedPeriod("2anos")}
+                        className={`cursor-pointer transition-colors ${selectedPeriod === "2anos" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        2 ANOS
+                      </span>
+                      <span 
+                        onClick={() => setSelectedPeriod("1ano")}
+                        className={`cursor-pointer transition-colors ${selectedPeriod === "1ano" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        1 ANO
+                      </span>
+                      <span 
+                        onClick={() => setSelectedPeriod("6meses")}
+                        className={`cursor-pointer transition-colors ${selectedPeriod === "6meses" ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        6 MESES
+                      </span>
                     </div>
-                    <ResponsiveContainer width="100%" height={180}>
-                      <LineChart data={monthlyData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                        <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                        <Tooltip contentStyle={{ fontSize: 12 }} />
-                        <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                        <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" connectNulls={false} />
-                        <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="Predição" connectNulls={false} />
-                        <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" connectNulls={false} />
-                        <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Máx" />
-                        <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Mín" />
-                        <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={1.5} strokeDasharray="3 3" name="Segurança" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </Card>
+                  </div>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip contentStyle={{ fontSize: 12 }} />
+                      <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                      <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" connectNulls={false} />
+                      <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="Predição" connectNulls={false} />
+                      <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" connectNulls={false} />
+                      <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Máx" />
+                      <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Mín" />
+                      <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={1.5} strokeDasharray="3 3" name="Segurança" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Card>
 
-                  <Card className="p-4">
-                    <h3 className="text-sm font-semibold mb-4">Recomendado</h3>
-                    <ResponsiveContainer width="100%" height={180}>
-                      <BarChart data={recommendationData} layout="horizontal">
-                        <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" hide />
-                        <Bar dataKey="recomendado" fill="hsl(var(--chart-1))" radius={[4, 4, 4, 4]} />
-                        <Bar dataKey="atual" fill="hsl(var(--destructive))" radius={[4, 4, 4, 4]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                    <div className="text-center mt-3">
-                      <p className={`text-sm font-semibold ${isSurplus ? 'text-destructive' : 'text-chart-1'}`}>
-                        {isSurplus ? 'Sobrando' : 'Faltando'} {Math.abs(difference).toFixed(0)} unidade(s)
-                      </p>
-                    </div>
-                  </Card>
-                </div>
-
-                {/* Second Row: Branch Sales + Distribution */}
+                {/* Branch Sales and Distribution */}
                 <div className="grid grid-cols-2 gap-4">
                   <Card className="p-4">
                     <h3 className="text-sm font-semibold mb-4">Vendas das Filiais</h3>
@@ -473,6 +480,54 @@ export default function Classes() {
                     </ResponsiveContainer>
                   </Card>
                 </div>
+
+                {/* Products Table */}
+                <Card className="p-4">
+                  <h3 className="text-sm font-semibold mb-4">Produtos ({filteredProducts.length})</h3>
+                  <div className="max-h-[400px] overflow-auto">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-card border-b">
+                        <tr className="text-left">
+                          <th className="p-2 font-semibold">SKU</th>
+                          <th className="p-2 font-semibold">Produto</th>
+                          <th className="p-2 font-semibold">Família</th>
+                          <th className="p-2 font-semibold">Cor</th>
+                          <th className="p-2 font-semibold">Tamanho</th>
+                          <th className="p-2 font-semibold">Local</th>
+                          <th className="p-2 font-semibold text-right">Estoque</th>
+                          <th className="p-2 font-semibold text-right">Demanda</th>
+                          <th className="p-2 font-semibold">Volatilidade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredProducts.map((product) => (
+                          <tr key={product.id} className="border-b hover:bg-accent/50">
+                            <td className="p-2 font-mono text-xs">{product.sku}</td>
+                            <td className="p-2">{product.name}</td>
+                            <td className="p-2 text-muted-foreground">{product.familia || "-"}</td>
+                            <td className="p-2 capitalize">{product.cor || "-"}</td>
+                            <td className="p-2 capitalize">{product.tamanho || "-"}</td>
+                            <td className="p-2">{product.local}</td>
+                            <td className="p-2 text-right font-medium">{product.stock?.toFixed(0) || 0}</td>
+                            <td className="p-2 text-right">{product.demandaMedia?.toFixed(1) || 0}</td>
+                            <td className="p-2">
+                              <Badge 
+                                variant={
+                                  product.volatilidade === "Alta" ? "destructive" : 
+                                  product.volatilidade === "Media" ? "secondary" : 
+                                  "default"
+                                }
+                                className="text-xs"
+                              >
+                                {product.volatilidade || "Baixa"}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
               </div>
             )}
           </div>
