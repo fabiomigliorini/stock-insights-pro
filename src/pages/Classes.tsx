@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Search, BarChart3 } from "lucide-react";
+import { Search, BarChart3, Loader2 } from "lucide-react";
 import { ProductAnalysis } from "@/components/ProductAnalysis";
 import { Product } from "@/lib/excelParser";
+import { getMonthlyDataForClass } from "@/lib/getMonthlyData";
 
 export default function Classes() {
   const { products } = useData();
@@ -23,6 +24,8 @@ export default function Classes() {
   const [selectedPeriod, setSelectedPeriod] = useState<"inicio" | "3anos" | "2anos" | "1ano" | "6meses">("1ano");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
 
   // Reset filters when class changes
   useEffect(() => {
@@ -127,59 +130,51 @@ export default function Classes() {
   }, [filteredProducts]);
 
   // Monthly data with historical sales and future predictions
-  const monthlyData = useMemo(() => {
-    if (!classStats) return [];
+  useEffect(() => {
+    if (!selectedClass) {
+      setMonthlyData([]);
+      return;
+    }
     
-    const monthsMap = {
-      "inicio": 36,
-      "3anos": 36,
-      "2anos": 24,
-      "1ano": 12,
-      "6meses": 6,
+    const loadMonthlyData = async () => {
+      setLoadingMonthlyData(true);
+      try {
+        const data = await getMonthlyDataForClass(
+          selectedClass,
+          selectedFamily !== "todos" ? selectedFamily : undefined,
+          selectedColor !== "todos" ? selectedColor : undefined,
+          selectedSize !== "todos" ? selectedSize : undefined
+        );
+        
+        // Filter by period
+        const periodMap = {
+          "inicio": 999,
+          "3anos": 36,
+          "2anos": 24,
+          "1ano": 12,
+          "6meses": 6,
+        };
+        const monthsToShow = periodMap[selectedPeriod];
+        const filteredData = data.slice(-monthsToShow);
+        
+        setMonthlyData(filteredData.map(d => ({
+          month: d.mes,
+          vendas: d.vendas,
+          estoque: d.estoque,
+          min: d.min,
+          max: d.max,
+          seguranca: d.seguranca,
+          predicao: undefined,
+        })));
+      } catch (error) {
+        console.error('Erro ao carregar dados mensais:', error);
+      } finally {
+        setLoadingMonthlyData(false);
+      }
     };
-    const numMonths = monthsMap[selectedPeriod];
-    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    
-    const volatility = classStats.predominantVolatility === "Alta" ? 0.3 : 
-                       classStats.predominantVolatility === "Media" ? 0.15 : 0.05;
-    
-    // Historical data
-    const historicalData = Array.from({ length: numMonths }, (_, i) => {
-      const monthIndex = i % 12;
-      const year = Math.floor(i / 12);
-      const vendas = Math.max(0, classStats.totalDemanda + (Math.random() - 0.5) * classStats.totalDemanda * volatility * 2);
-      return {
-        month: numMonths > 12 ? `${monthNames[monthIndex]}/${year + 1}` : monthNames[monthIndex],
-        vendas,
-        estoque: classStats.totalEstoque,
-        min: classStats.totalMin,
-        max: classStats.totalMax,
-        seguranca: classStats.totalMin * 1.2,
-        predicao: undefined,
-      };
-    });
 
-    // Prediction for next 12 months
-    const predictionData = Array.from({ length: 12 }, (_, i) => {
-      const monthIndex = i % 12;
-      const lastHistoricalSales = historicalData[historicalData.length - 1]?.vendas || classStats.totalDemanda;
-      // Trend: slight growth with volatility
-      const trend = 1 + (i * 0.01); // 1% growth per month
-      const predicao = Math.max(0, lastHistoricalSales * trend + (Math.random() - 0.5) * lastHistoricalSales * volatility);
-      
-      return {
-        month: `${monthNames[monthIndex]} (P)`,
-        vendas: undefined,
-        estoque: undefined,
-        min: classStats.totalMin,
-        max: classStats.totalMax,
-        seguranca: classStats.totalMin * 1.2,
-        predicao,
-      };
-    });
-
-    return [...historicalData, ...predictionData];
-  }, [classStats, selectedPeriod]);
+    loadMonthlyData();
+  }, [selectedClass, selectedFamily, selectedColor, selectedSize, selectedPeriod]);
 
   // Branch data
   const branchData = useMemo(() => {
@@ -425,21 +420,27 @@ export default function Classes() {
                       </span>
                     </div>
                   </div>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={monthlyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                      <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip contentStyle={{ fontSize: 12 }} />
-                      <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                      <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" connectNulls={false} />
-                      <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="Predição" connectNulls={false} />
-                      <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" connectNulls={false} />
-                      <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Máx" />
-                      <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Mín" />
-                      <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={1.5} strokeDasharray="3 3" name="Segurança" />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {loadingMonthlyData ? (
+                    <div className="flex items-center justify-center h-[250px]">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={monthlyData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                        <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip contentStyle={{ fontSize: 12 }} />
+                        <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                        <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" connectNulls={false} />
+                        <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="Predição" connectNulls={false} />
+                        <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" connectNulls={false} />
+                        <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Máx" />
+                        <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Mín" />
+                        <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={1.5} strokeDasharray="3 3" name="Segurança" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
                 </Card>
 
                 {/* Branch Sales and Distribution */}
