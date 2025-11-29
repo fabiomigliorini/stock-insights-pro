@@ -59,31 +59,55 @@ const Import = () => {
 
           <TabsContent value="upload" className="space-y-6">
             <AutoImportButton />
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Ou</span>
+              </div>
+            </div>
             
             <ExcelUpload onDataImported={handleDataImported} />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 bg-card rounded-lg border border-border">
-                <h4 className="font-semibold text-foreground mb-2">📦 Produtos</h4>
-                <p className="text-sm text-muted-foreground">
-                  Cadastro completo com SKU, níveis mínimos e máximos por produto
-                </p>
+            <Card className="p-6 bg-muted/50">
+              <h4 className="font-semibold text-foreground mb-3">📋 Formato Esperado da Planilha</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="font-medium text-foreground mb-1">Aba: Produtos</p>
+                  <ul className="text-muted-foreground space-y-1 text-xs">
+                    <li>• SKU / Código</li>
+                    <li>• Produto / Descrição</li>
+                    <li>• Categoria</li>
+                    <li>• Estoque Atual</li>
+                    <li>• Estoque Mínimo</li>
+                    <li>• Estoque Máximo</li>
+                    <li>• Ponto de Reposição</li>
+                    <li>• Estoque de Segurança</li>
+                    <li>• Filial</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground mb-1">Aba: Filiais</p>
+                  <ul className="text-muted-foreground space-y-1 text-xs">
+                    <li>• Nome / Filial</li>
+                    <li>• Estoque</li>
+                    <li>• Capacidade</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground mb-1">Aba: Movimentação</p>
+                  <ul className="text-muted-foreground space-y-1 text-xs">
+                    <li>• Data</li>
+                    <li>• Produto</li>
+                    <li>• Quantidade</li>
+                    <li>• Tipo (entrada/saída)</li>
+                    <li>• Filial</li>
+                  </ul>
+                </div>
               </div>
-
-              <div className="p-6 bg-card rounded-lg border border-border">
-                <h4 className="font-semibold text-foreground mb-2">🏢 Filiais</h4>
-                <p className="text-sm text-muted-foreground">
-                  Configurações de capacidade e estoque atual de cada unidade
-                </p>
-              </div>
-
-              <div className="p-6 bg-card rounded-lg border border-border">
-                <h4 className="font-semibold text-foreground mb-2">📊 Movimentação</h4>
-                <p className="text-sm text-muted-foreground">
-                  Histórico de entradas e saídas para análise e predição
-                </p>
-              </div>
-            </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="avancado" className="space-y-6">
