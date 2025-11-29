@@ -4,13 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Printer, ShoppingCart } from "lucide-react";
-import { useData } from "@/contexts/DataContext";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAutoLoad } from "@/hooks/useAutoLoad";
+import { supabase } from "@/integrations/supabase/client";
+import { MonthlySale } from "@/lib/importHistoricalData";
 
 const Compras = () => {
   useAutoLoad();
-  const { products } = useData();
+  
+  const [monthlyData, setMonthlyData] = useState<MonthlySale[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Filtros
   const [selectedClasse, setSelectedClasse] = useState<string>("all");
@@ -19,46 +22,86 @@ const Compras = () => {
   const [selectedCor, setSelectedCor] = useState<string>("all");
   const [selectedLocal, setSelectedLocal] = useState<string>("all");
 
+  // Buscar dados do último mês disponível
+  useEffect(() => {
+    const fetchLatestMonthData = async () => {
+      try {
+        setLoading(true);
+        
+        // Buscar o último mês/ano disponível
+        const { data: latestData, error: latestError } = await supabase
+          .from('monthly_sales')
+          .select('ano, mes')
+          .order('ano', { ascending: false })
+          .order('mes', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (latestError) throw latestError;
+        if (!latestData) {
+          setLoading(false);
+          return;
+        }
+
+        // Buscar todos os dados desse mês
+        const { data, error } = await supabase
+          .from('monthly_sales')
+          .select('*')
+          .eq('ano', latestData.ano)
+          .eq('mes', latestData.mes);
+
+        if (error) throw error;
+        setMonthlyData(data || []);
+      } catch (error) {
+        console.error('Erro ao buscar dados mensais:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLatestMonthData();
+  }, []);
+
   // Extrair valores únicos para os filtros
   const classes = useMemo(() => 
-    Array.from(new Set(products.map(p => p.classe).filter(Boolean))).sort(),
-    [products]
+    Array.from(new Set(monthlyData.map(p => p.classe).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
   const familias = useMemo(() => 
-    Array.from(new Set(products.map(p => p.familia).filter(Boolean))).sort(),
-    [products]
+    Array.from(new Set(monthlyData.map(p => p.familia).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
   const tamanhos = useMemo(() => 
-    Array.from(new Set(products.map(p => p.tamanho).filter(Boolean))).sort(),
-    [products]
+    Array.from(new Set(monthlyData.map(p => p.tamanho).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
   const cores = useMemo(() => 
-    Array.from(new Set(products.map(p => p.cor).filter(Boolean))).sort(),
-    [products]
+    Array.from(new Set(monthlyData.map(p => p.cor).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
   const locais = useMemo(() => 
-    Array.from(new Set(products.map(p => p.local).filter(Boolean))).sort(),
-    [products]
+    Array.from(new Set(monthlyData.map(p => p.local).filter(Boolean))).sort(),
+    [monthlyData]
   );
 
   // Gerar sugestões de compra: produtos com estoque abaixo do ponto de pedido
   const suggestions = useMemo(() => {
-    const purchaseSuggestions = products
+    const purchaseSuggestions = monthlyData
       .filter(p => {
-        const stock = p.stock || 0;
-        const pontoPedido = p.pontoPedido || 0;
+        const stock = p.estoque_final_mes || 0;
+        const pontoPedido = p.ponto_pedido_mes || 0;
         
         // Produto precisa ter ponto de pedido definido e estar abaixo dele
         return pontoPedido > 0 && stock < pontoPedido;
       })
       .map(p => {
-        const stock = p.stock || 0;
-        const estoqueMax = p.estoqueMaxSugerido || p.max || 0;
-        const pontoPedido = p.pontoPedido || 0;
+        const stock = p.estoque_final_mes || 0;
+        const estoqueMax = p.estoque_maximo_mes || 0;
+        const pontoPedido = p.ponto_pedido_mes || 0;
         
         // Quantidade para comprar = estoque máximo - saldo atual
         const quantityToOrder = Math.max(0, estoqueMax - stock);
@@ -67,9 +110,9 @@ const Compras = () => {
         const deficit = pontoPedido - stock;
         
         return {
-          id: p.id,
+          id: `${p.sku}_${p.local}_${p.cor || ''}_${p.tamanho || ''}`,
           sku: p.sku,
-          produto: p.name,
+          produto: p.produto,
           classe: p.classe,
           familia: p.familia,
           cor: p.cor,
@@ -93,7 +136,7 @@ const Compras = () => {
       });
 
     return purchaseSuggestions;
-  }, [products]);
+  }, [monthlyData]);
 
   // Aplicar filtros
   const filteredSuggestions = useMemo(() => {
@@ -116,6 +159,16 @@ const Compras = () => {
     filteredSuggestions.reduce((sum, s) => sum + s.quantity, 0),
     [filteredSuggestions]
   );
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="p-8 flex items-center justify-center">
+          <p className="text-muted-foreground">Carregando dados...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
