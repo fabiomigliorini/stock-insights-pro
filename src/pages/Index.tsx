@@ -9,62 +9,60 @@ import { useData } from "@/contexts/DataContext";
 import { useAutoLoad } from "@/hooks/useAutoLoad";
 
 const Index = () => {
-  useAutoLoad(); // Carrega dados automaticamente se estiver vazio
-  const { products, getTotalStock } = useData();
+  useAutoLoad();
+  const { products } = useData();
   
-  // KPIs calculados
-  const totalStock = getTotalStock();
+  // KPIs baseados APENAS nos dados reais da planilha
   const produtosAtivos = products.length;
-  const precisamReposicao = products.filter(p => p.stock < (p.pontoPedido || p.reorderPoint)).length;
-  const criticos = products.filter(p => 
-    p.volatilidade?.toLowerCase() === 'alta' && p.status === 'low'
-  ).length;
-  const lowStockCount = products.filter(p => p.status === 'low').length;
+  const altaVolatilidade = products.filter(p => p.volatilidade?.toLowerCase() === 'alta').length;
+  const mediaVolatilidade = products.filter(p => p.volatilidade?.toLowerCase() === 'media').length;
+  const baixaVolatilidade = products.filter(p => p.volatilidade?.toLowerCase() === 'baixa').length;
+  const demandaTotal = products.reduce((sum, p) => sum + (p.demandaMedia || 0), 0);
   
   return (
     <DashboardLayout>
       <div className="p-8 space-y-8 animate-in fade-in duration-500">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard de Estoque</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard - Parâmetros de Estoque</h1>
           <p className="text-muted-foreground">
-            Visão consolidada e predições inteligentes para gestão eficiente
+            Análise de demanda e parâmetros sugeridos de estoque
           </p>
         </div>
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <KPICard
-            title="Produtos Ativos"
+            title="Produtos Cadastrados"
             value={produtosAtivos.toLocaleString('pt-BR')}
-            change={`${products.filter(p => p.status === 'ok').length} em níveis normais`}
+            change="SKUs + Locais únicos"
             changeType="positive"
             icon={Package}
             iconColor="text-primary"
           />
           <KPICard
-            title="Precisam Reposição"
-            value={precisamReposicao.toLocaleString('pt-BR')}
-            change="Abaixo do ponto de pedido"
-            changeType={precisamReposicao > 0 ? "negative" : "positive"}
-            icon={AlertTriangle}
-            iconColor="text-warning"
+            title="Demanda Total Média"
+            value={demandaTotal.toFixed(0)}
+            change="unidades por período"
+            changeType="positive"
+            icon={TrendingDown}
+            iconColor="text-success"
           />
           <KPICard
-            title="Críticos"
-            value={criticos.toLocaleString('pt-BR')}
-            change="Alta volatilidade + estoque baixo"
-            changeType={criticos > 0 ? "negative" : "positive"}
-            icon={TrendingDown}
+            title="Alta Volatilidade"
+            value={altaVolatilidade.toLocaleString('pt-BR')}
+            change={`${((altaVolatilidade/produtosAtivos)*100).toFixed(1)}% do total`}
+            changeType={altaVolatilidade > 0 ? "negative" : "positive"}
+            icon={AlertTriangle}
             iconColor="text-destructive"
           />
           <KPICard
-            title="Estoque Total"
-            value={totalStock.toLocaleString('pt-BR')}
-            change={`${lowStockCount} abaixo do mínimo`}
-            changeType={lowStockCount > 0 ? "negative" : "positive"}
+            title="Média/Baixa Volatilidade"
+            value={(mediaVolatilidade + baixaVolatilidade).toLocaleString('pt-BR')}
+            change={`${((mediaVolatilidade/produtosAtivos)*100).toFixed(1)}% média | ${((baixaVolatilidade/produtosAtivos)*100).toFixed(1)}% baixa`}
+            changeType="positive"
             icon={DollarSign}
-            iconColor="text-success"
+            iconColor="text-primary"
           />
         </div>
 
