@@ -4,10 +4,14 @@ export interface Product {
   id: string;
   name: string;
   sku: string;
+  category: string;
   stock: number;
   min: number;
   max: number;
+  reorderPoint: number;
+  safetyStock: number;
   status: 'low' | 'ok' | 'high';
+  filial: string;
 }
 
 export interface BranchConfig {
@@ -50,9 +54,9 @@ export const parseExcelFile = async (file: File): Promise<{
           const jsonData = XLSX.utils.sheet_to_json(sheet);
           
           result.products = jsonData.map((row: any, index) => {
-            const stock = Number(row.estoque || row.Estoque || 0);
-            const min = Number(row.minimo || row.Mínimo || row.min || 0);
-            const max = Number(row.maximo || row.Máximo || row.max || 100);
+            const stock = Number(row['Estoque Atual'] || row['Estoque'] || 0);
+            const min = Number(row['Estoque Mínimo'] || row['Minimo'] || 0);
+            const max = Number(row['Estoque Máximo'] || row['Maximo'] || 100);
             
             let status: 'low' | 'ok' | 'high' = 'ok';
             if (stock < min) status = 'low';
@@ -60,12 +64,16 @@ export const parseExcelFile = async (file: File): Promise<{
 
             return {
               id: String(index + 1),
-              name: row.nome || row.Nome || row.produto || row.Produto || `Produto ${index + 1}`,
-              sku: row.sku || row.SKU || row.codigo || row.Código || `SKU-${index + 1}`,
+              name: row['Produto'] || row['Descrição'] || row['Nome'] || `Produto ${index + 1}`,
+              sku: row['SKU'] || row['Código'] || `SKU-${index + 1}`,
+              category: row['Categoria'] || row['Grupo'] || 'Geral',
               stock,
               min,
               max,
+              reorderPoint: Number(row['Ponto de Reposição'] || row['Ponto Reposicao'] || min + (max - min) * 0.3),
+              safetyStock: Number(row['Estoque de Segurança'] || row['Estoque Seguranca'] || min * 0.2),
               status,
+              filial: row['Filial'] || row['Loja'] || 'CD',
             };
           });
         }
@@ -95,16 +103,16 @@ export const parseExcelFile = async (file: File): Promise<{
 
         // Parse Movimentação sheet
         if (workbook.SheetNames.includes('Movimentação') || workbook.SheetNames.includes('Movimentacao')) {
-          const sheetName = workbook.SheetNames.includes('Movimentação') ? 'Movimentação' : 'Movimentacao';
+          const sheetName = workbook.SheetNames.find(s => s.toLowerCase().includes('moviment')) || 'Movimentação';
           const sheet = workbook.Sheets[sheetName];
           const jsonData = XLSX.utils.sheet_to_json(sheet);
           
           result.movements = jsonData.map((row: any) => ({
-            date: row.data || row.Data || new Date().toISOString(),
-            product: row.produto || row.Produto || row.nome || row.Nome || 'Produto',
-            quantity: Number(row.quantidade || row.Quantidade || 0),
-            type: (row.tipo || row.Tipo || 'entrada').toLowerCase() as 'entrada' | 'saida',
-            branch: row.filial || row.Filial || row.local || row.Local || 'Filial',
+            date: row['Data'] || row.data || new Date().toISOString(),
+            product: row['Produto'] || row.produto || row['Nome'] || row.nome || 'Produto',
+            quantity: Number(row['Quantidade'] || row.quantidade || 0),
+            type: (row['Tipo'] || row.tipo || 'entrada').toLowerCase() as 'entrada' | 'saida',
+            branch: row['Filial'] || row.filial || row['Loja'] || row.loja || 'CD',
           }));
         }
 

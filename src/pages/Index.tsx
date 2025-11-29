@@ -1,4 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { AutoLoadData } from "@/components/AutoLoadData";
 import { KPICard } from "@/components/KPICard";
 import { StockChart } from "@/components/StockChart";
 import { BranchesOverview } from "@/components/BranchesOverview";
@@ -13,6 +14,7 @@ const Index = () => {
   
   return (
     <DashboardLayout>
+      <AutoLoadData />
       <div className="p-8 space-y-8 animate-in fade-in duration-500">
         {/* Header */}
         <div>

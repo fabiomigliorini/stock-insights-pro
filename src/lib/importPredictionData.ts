@@ -4,6 +4,9 @@ import { Product, BranchConfig } from "./excelParser";
 
 export const importPredictionData = async () => {
   try {
+    // Limpar dados existentes
+    dataStore.clear();
+    
     const response = await fetch("/data/modelo-predicao.xlsx");
     const arrayBuffer = await response.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer, { type: "array" });
@@ -26,10 +29,14 @@ export const importPredictionData = async () => {
           id: String(index + 1),
           sku: String(row["SKU"] || row["Código"] || `SKU-${index + 1}`),
           name: String(row["Produto"] || row["Descrição"] || row["Nome"] || `Produto ${index + 1}`),
+          category: String(row["Categoria"] || row["Grupo"] || "Geral"),
           stock,
           min,
           max,
+          reorderPoint: Number(row["Ponto de Reposição"] || row["Ponto Reposicao"] || min + (max - min) * 0.3),
+          safetyStock: Number(row["Estoque de Segurança"] || row["Estoque Seguranca"] || min * 0.2),
           status,
+          filial: String(row["Filial"] || row["Loja"] || "CD"),
         };
       });
 

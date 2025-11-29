@@ -33,11 +33,11 @@ export const AutoImportButton = () => {
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-foreground mb-2">
-            Importação Rápida - Dados de Predição
+            Importação Rápida - Dados de Exemplo
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Carregue automaticamente os dados do arquivo Modelo_Predicao_Estoque.xlsx incluindo
-            produtos, filiais e histórico de movimentações.
+            Carregue automaticamente os dados de exemplo (Modelo_Predicao_Estoque.xlsx) com
+            produtos, filiais, configurações de estoque e histórico de movimentações.
           </p>
 
           {result && (
