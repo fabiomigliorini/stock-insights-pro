@@ -146,13 +146,21 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       
       if (dbProducts.length > 0) {
         const { error } = await supabase.from('products').insert(dbProducts);
-        if (error) throw error;
+        if (error) {
+          if (error.code === '42501') {
+            toast.error('Você precisa de permissões de administrador para importar dados. Acesse /admin-setup');
+            throw error;
+          }
+          throw error;
+        }
       }
       
       toast.success('Produtos salvos no banco');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar produtos:', error);
-      toast.error('Erro ao salvar produtos no banco');
+      if (error?.code !== '42501') {
+        toast.error('Erro ao salvar produtos no banco');
+      }
     }
   };
 
@@ -170,13 +178,21 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       
       if (dbBranches.length > 0) {
         const { error } = await supabase.from('branches').insert(dbBranches);
-        if (error) throw error;
+        if (error) {
+          if (error.code === '42501') {
+            toast.error('Você precisa de permissões de administrador para gerenciar filiais');
+            throw error;
+          }
+          throw error;
+        }
       }
       
       toast.success('Filiais salvas no banco');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar filiais:', error);
-      toast.error('Erro ao salvar filiais no banco');
+      if (error?.code !== '42501') {
+        toast.error('Erro ao salvar filiais no banco');
+      }
     }
   };
 
