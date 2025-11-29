@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, TrendingUp, Building2, Settings, Upload, LogOut, User } from "lucide-react";
+import { LayoutDashboard, Package, TrendingUp, Building2, Settings, Upload, LogOut, User, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ interface DashboardLayoutProps {
 const navigation = [
   { name: "Overview", icon: LayoutDashboard, href: "/", current: true },
   { name: "Produtos", icon: Package, href: "/produtos", current: false },
+  { name: "Classes", icon: Layers, href: "/classes", current: false },
   { name: "Predições", icon: TrendingUp, href: "/predicoes", current: false },
   { name: "Filiais", icon: Building2, href: "/filiais", current: false },
 ];

@@ -11,6 +11,7 @@ import Import from "./pages/Import";
 import Produtos from "./pages/Produtos";
 import Predicoes from "./pages/Predicoes";
 import Filiais from "./pages/Filiais";
+import Classes from "./pages/Classes";
 import TestSheetNames from "./pages/TestSheetNames";
 import Auth from "./pages/Auth";
 import AdminSetup from "./pages/AdminSetup";
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/produtos" element={<ProtectedRoute><Produtos /></ProtectedRoute>} />
               <Route path="/predicoes" element={<ProtectedRoute><Predicoes /></ProtectedRoute>} />
               <Route path="/filiais" element={<ProtectedRoute><Filiais /></ProtectedRoute>} />
+              <Route path="/classes" element={<ProtectedRoute><Classes /></ProtectedRoute>} />
               <Route path="/test-sheets" element={<ProtectedRoute><TestSheetNames /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
