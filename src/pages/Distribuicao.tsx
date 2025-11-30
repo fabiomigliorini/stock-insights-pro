@@ -291,7 +291,6 @@ const Distribuicao = () => {
                   <th className="p-3 font-semibold">Origem</th>
                   <th className="p-3 font-semibold">Destino</th>
                   <th className="p-3 font-semibold text-right">Quantidade</th>
-                  <th className="p-3 font-semibold print:hidden">Ação</th>
                 </tr>
               </thead>
               <tbody>
@@ -325,11 +324,6 @@ const Distribuicao = () => {
                       </div>
                     </td>
                     <td className="p-3 text-right font-semibold">{suggestion.quantity}</td>
-                    <td className="p-3 print:hidden">
-                      <Button size="sm" variant="outline">
-                        Aprovar
-                      </Button>
-                    </td>
                   </tr>
                 ))}
               </tbody>

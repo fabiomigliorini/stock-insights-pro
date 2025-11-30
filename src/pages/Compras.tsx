@@ -293,7 +293,6 @@ const Compras = () => {
                   <th className="p-3 font-semibold text-right">Ponto de Pedido</th>
                   <th className="p-3 font-semibold text-right">Estoque Máx</th>
                   <th className="p-3 font-semibold text-right">Qtd. a Comprar</th>
-                  <th className="p-3 font-semibold print:hidden">Ação</th>
                 </tr>
               </thead>
               <tbody>
@@ -322,11 +321,6 @@ const Compras = () => {
                     <td className="p-3 text-right font-medium">{suggestion.pontoPedido}</td>
                     <td className="p-3 text-right">{suggestion.estoqueMax}</td>
                     <td className="p-3 text-right font-bold text-primary">{suggestion.quantity}</td>
-                    <td className="p-3 print:hidden">
-                      <Button size="sm" variant="outline">
-                        Encomendar
-                      </Button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
