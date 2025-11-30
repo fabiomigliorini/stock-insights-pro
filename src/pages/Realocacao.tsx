@@ -2,12 +2,12 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Printer, ArrowRight } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useAutoLoad } from "@/hooks/useAutoLoad";
 import { supabase } from "@/integrations/supabase/client";
 import { MonthlySale } from "@/lib/importHistoricalData";
+import { FilterButton } from "@/components/FilterButton";
 
 const Realocacao = () => {
   useAutoLoad();
@@ -241,96 +241,43 @@ const Realocacao = () => {
         {/* Filtros */}
         <Card className="p-6 print:hidden">
           <h3 className="text-lg font-semibold mb-4">Filtros</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Classe</label>
-              <Select value={selectedClasse} onValueChange={setSelectedClasse}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {classes.map(c => (
-                    <SelectItem key={c} value={c!}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Família</label>
-              <Select value={selectedFamilia} onValueChange={setSelectedFamilia}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {familias.map(f => (
-                    <SelectItem key={f} value={f!}>{f}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Tamanho</label>
-              <Select value={selectedTamanho} onValueChange={setSelectedTamanho}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {tamanhos.map(t => (
-                    <SelectItem key={t} value={t!}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Cor</label>
-              <Select value={selectedCor} onValueChange={setSelectedCor}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {cores.map(c => (
-                    <SelectItem key={c} value={c!}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Local de Origem</label>
-              <Select value={selectedOrigem} onValueChange={setSelectedOrigem}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {locaisOrigem.map(l => (
-                    <SelectItem key={l} value={l!}>{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Local de Destino</label>
-              <Select value={selectedDestino} onValueChange={setSelectedDestino}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {locaisDestino.map(l => (
-                    <SelectItem key={l} value={l!}>{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex flex-wrap gap-3">
+            <FilterButton
+              label="Classe"
+              value={selectedClasse}
+              options={classes as string[]}
+              onChange={setSelectedClasse}
+            />
+            <FilterButton
+              label="Família"
+              value={selectedFamilia}
+              options={familias as string[]}
+              onChange={setSelectedFamilia}
+            />
+            <FilterButton
+              label="Tamanho"
+              value={selectedTamanho}
+              options={tamanhos as string[]}
+              onChange={setSelectedTamanho}
+            />
+            <FilterButton
+              label="Cor"
+              value={selectedCor}
+              options={cores as string[]}
+              onChange={setSelectedCor}
+            />
+            <FilterButton
+              label="Local de Origem"
+              value={selectedOrigem}
+              options={locaisOrigem as string[]}
+              onChange={setSelectedOrigem}
+            />
+            <FilterButton
+              label="Local de Destino"
+              value={selectedDestino}
+              options={locaisDestino as string[]}
+              onChange={setSelectedDestino}
+            />
           </div>
         </Card>
 
