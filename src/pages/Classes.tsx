@@ -146,16 +146,29 @@ export default function Classes() {
           selectedSize !== "todos" ? selectedSize : undefined
         );
         
-        // Apply period filter to historical data FIRST
-        const periodMap = {
-          "inicio": 999,
-          "3anos": 36,
-          "2anos": 24,
-          "1ano": 12,
-          "6meses": 6,
-        };
-        const monthsToShow = periodMap[selectedPeriod];
-        const filteredHistoricalData = data.slice(-monthsToShow);
+        // Determine period using calendar years
+        const maxYear = Math.max(...data.map(d => d.ano));
+        let filteredHistoricalData = data;
+
+        switch (selectedPeriod) {
+          case "3anos":
+            filteredHistoricalData = data.filter(d => d.ano >= maxYear - 2);
+            break;
+          case "2anos":
+            filteredHistoricalData = data.filter(d => d.ano >= maxYear - 1);
+            break;
+          case "1ano":
+            filteredHistoricalData = data.filter(d => d.ano === maxYear);
+            break;
+          case "6meses": {
+            const sixMonths = 6;
+            filteredHistoricalData = data.slice(-sixMonths);
+            break;
+          }
+          case "inicio":
+          default:
+            filteredHistoricalData = data;
+        }
         
         // Map filtered historical data
         const chartData = filteredHistoricalData.map(d => ({
