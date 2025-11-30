@@ -1,4 +1,19 @@
-import { MonthlySale } from "./importHistoricalData";
+export interface MonthlySale {
+  ano: number;
+  mes: number;
+  sku: string;
+  produto: string;
+  familia: string;
+  classe: string;
+  subclasse: string;
+  cor: string;
+  tamanho: string;
+  local: string;
+  cidade: string;
+  qtde_vendida: number;
+  qtde_entregue: number;
+  estoque_final_mes: number;
+}
 
 // Gera dados locais realistas automaticamente para demonstração
 // Usado quando não há dados importados no sistema
