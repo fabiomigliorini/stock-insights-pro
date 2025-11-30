@@ -118,11 +118,20 @@ export async function getMonthlyDataForClass(
       query = query.eq('tamanho', tamanho);
     }
 
+    console.log('[getMonthlyDataForClass] Filtros:', { classe, familia, cor, tamanho });
+
     const { data, error } = await query;
 
     if (error) throw error;
 
-    if (!data || data.length === 0) return [];
+    if (!data || data.length === 0) {
+      console.log('[getMonthlyDataForClass] Nenhum dado retornado');
+      return [];
+    }
+
+    console.log('[getMonthlyDataForClass] Registros brutos retornados:', data.length);
+    console.log('[getMonthlyDataForClass] Anos únicos:', [...new Set(data.map(d => d.ano))].sort());
+    console.log('[getMonthlyDataForClass] Primeiros 5 registros:', data.slice(0, 5).map(d => ({ ano: d.ano, mes: d.mes, local: d.local })));
 
     // Agrupar por ano-mês
     const grouped = data.reduce((acc: Record<string, any>, row: MonthlySale) => {
@@ -152,7 +161,7 @@ export async function getMonthlyDataForClass(
 
     const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-    return Object.values(grouped)
+    const result = Object.values(grouped)
       .sort((a: any, b: any) => a.ano - b.ano || a.mes - b.mes)
       .map((group: any) => ({
         mes: `${monthNames[group.mes - 1]}/${group.ano.toString().slice(-2)}`,
@@ -165,6 +174,12 @@ export async function getMonthlyDataForClass(
         seguranca: group.seguranca,
         pontoPedido: group.pontoPedido,
       }));
+
+    console.log('[getMonthlyDataForClass] Total de pontos mensais após agrupamento:', result.length);
+    console.log('[getMonthlyDataForClass] Anos únicos no resultado:', [...new Set(result.map(d => d.ano))].sort());
+    console.log('[getMonthlyDataForClass] Intervalo:', result[0]?.mes, 'até', result[result.length - 1]?.mes);
+
+    return result;
   } catch (error) {
     console.error('Erro ao buscar dados mensais da classe:', error);
     return [];
