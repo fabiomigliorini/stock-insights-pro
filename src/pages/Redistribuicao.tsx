@@ -3,18 +3,33 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
-import { useAutoLoad } from "@/hooks/useAutoLoad";
-import { supabase } from "@/integrations/supabase/client";
-import { MonthlySale } from "@/lib/importHistoricalData";
+import { useState, useMemo } from "react";
+import { useMockData } from "@/hooks/useMockData";
 import { FilterButton } from "@/components/FilterButton";
 
-const Transferencias = () => {
-  useAutoLoad();
-  
-  const [monthlyData, setMonthlyData] = useState<MonthlySale[]>([]);
-  const [loading, setLoading] = useState(true);
+interface RedistribuicaoSuggestion {
+  id: string;
+  sku: string;
+  produto: string;
+  classe: string;
+  familia: string;
+  cor: string;
+  tamanho: string;
+  from: string;
+  cidadeOrigem: string;
+  to: string;
+  cidadeDestino: string;
+  quantity: number;
+  fromStock: number;
+  toStock: number;
+  toMin: number;
+  toMax: number;
+  priority: "high" | "medium";
+}
 
+const Redistribuicao = () => {
+  const { mockData, isLoading } = useMockData();
+  
   // Filtros
   const [selectedClasse, setSelectedClasse] = useState<string>("all");
   const [selectedFamilia, setSelectedFamilia] = useState<string>("all");
@@ -22,101 +37,72 @@ const Transferencias = () => {
   const [selectedCor, setSelectedCor] = useState<string>("all");
   const [selectedDestino, setSelectedDestino] = useState<string>("all");
 
-  // Buscar dados do último mês disponível
-  useEffect(() => {
-    const fetchLatestMonthData = async () => {
-      try {
-        setLoading(true);
-        
-        // Buscar o último mês/ano disponível
-        const { data: latestData, error: latestError } = await supabase
-          .from('monthly_sales')
-          .select('ano, mes')
-          .order('ano', { ascending: false })
-          .order('mes', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (latestError) throw latestError;
-        if (!latestData) {
-          setLoading(false);
-          return;
-        }
-
-        // Buscar todos os dados desse mês
-        const { data, error } = await supabase
-          .from('monthly_sales')
-          .select('*')
-          .eq('ano', latestData.ano)
-          .eq('mes', latestData.mes);
-
-        if (error) throw error;
-        setMonthlyData(data || []);
-      } catch (error) {
-        console.error('Erro ao buscar dados mensais:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLatestMonthData();
-  }, []);
+  // Pegar dados do último mês disponível
+  const latestMonthData = useMemo(() => {
+    if (!mockData.length) return [];
+    
+    // Encontrar o último ano e mês
+    const maxYear = Math.max(...mockData.map(d => d.ano));
+    const dataLastYear = mockData.filter(d => d.ano === maxYear);
+    const maxMonth = Math.max(...dataLastYear.map(d => d.mes));
+    
+    return mockData.filter(d => d.ano === maxYear && d.mes === maxMonth);
+  }, [mockData]);
 
   // Extrair valores únicos para os filtros
   const classes = useMemo(() => 
-    Array.from(new Set(monthlyData.map(p => p.classe).filter(Boolean))).sort(),
-    [monthlyData]
+    Array.from(new Set(latestMonthData.map(p => p.classe).filter(Boolean))).sort(),
+    [latestMonthData]
   );
 
   const familias = useMemo(() => 
-    Array.from(new Set(monthlyData.map(p => p.familia).filter(Boolean))).sort(),
-    [monthlyData]
+    Array.from(new Set(latestMonthData.map(p => p.familia).filter(Boolean))).sort(),
+    [latestMonthData]
   );
 
   const tamanhos = useMemo(() => 
-    Array.from(new Set(monthlyData.map(p => p.tamanho).filter(Boolean))).sort(),
-    [monthlyData]
+    Array.from(new Set(latestMonthData.map(p => p.tamanho).filter(Boolean))).sort(),
+    [latestMonthData]
   );
 
   const cores = useMemo(() => 
-    Array.from(new Set(monthlyData.map(p => p.cor).filter(Boolean))).sort(),
-    [monthlyData]
+    Array.from(new Set(latestMonthData.map(p => p.cor).filter(Boolean))).sort(),
+    [latestMonthData]
   );
 
   const locaisDestino = useMemo(() => 
-    Array.from(new Set(monthlyData.map(p => p.local).filter(Boolean))).sort(),
-    [monthlyData]
+    Array.from(new Set(latestMonthData.map(p => p.local).filter(Boolean).filter(l => l !== "CD"))).sort(),
+    [latestMonthData]
   );
 
-  // Gerar sugestões de transferência
+  // Gerar sugestões de redistribuição
   const suggestions = useMemo(() => {
-    // Agrupar produtos por SKU+Cor+Tamanho
-    const productMap = new Map<string, MonthlySale[]>();
+    // Agrupar produtos por SKU
+    const productMap = new Map<string, typeof latestMonthData>();
     
-    monthlyData.forEach(p => {
-      const key = `${p.sku}_${p.cor || ''}_${p.tamanho || ''}`;
-      if (!productMap.has(key)) {
-        productMap.set(key, []);
+    latestMonthData.forEach(p => {
+      if (!productMap.has(p.sku)) {
+        productMap.set(p.sku, []);
       }
-      productMap.get(key)!.push(p);
+      productMap.get(p.sku)!.push(p);
     });
 
-    const transferSuggestions: any[] = [];
+    const redistributionSuggestions: RedistribuicaoSuggestion[] = [];
 
-    // Para cada grupo de produtos (mesmo SKU+Cor+Tamanho)
-    productMap.forEach((productsByLocation, key) => {
+    // Para cada grupo de produtos (mesmo SKU)
+    productMap.forEach((productsByLocation) => {
       // Encontrar o CD
       const cdProduct = productsByLocation.find(p => p.local === 'CD');
-      if (!cdProduct || (cdProduct.estoque_final_mes || 0) <= 0) return; // Sem estoque no CD
+      if (!cdProduct || cdProduct.estoque_final_mes <= 0) return; // Sem estoque no CD
 
       // Para cada filial
       const branches = productsByLocation.filter(p => p.local !== 'CD');
       branches.forEach(branchProduct => {
-        const branchStock = branchProduct.estoque_final_mes || 0;
-        const branchVendas = branchProduct.qtde_vendida || 0;
-        const cdStock = cdProduct.estoque_final_mes || 0;
+        const branchStock = branchProduct.estoque_final_mes;
+        const branchVendas = branchProduct.qtde_vendida;
+        const cdStock = cdProduct.estoque_final_mes;
 
-        // Estimar mínimo como 50% das vendas e máximo como 2x vendas
+        // Estimar mínimo como 50% das vendas e máximo como 200% vendas
         const branchMinEstimado = branchVendas * 0.5;
         const branchMaxEstimado = branchVendas * 2;
 
@@ -127,14 +113,14 @@ const Transferencias = () => {
           const quantity = Math.min(quantityNeeded, cdStock);
 
           if (quantity > 0) {
-            transferSuggestions.push({
+            redistributionSuggestions.push({
               id: `${cdProduct.sku}_${cdProduct.local}_${branchProduct.local}`,
               sku: cdProduct.sku,
               produto: cdProduct.produto,
               classe: cdProduct.classe,
               familia: cdProduct.familia,
               cor: cdProduct.cor,
-              tamanho: cdProduct.tamanho,
+              tamanho: branchProduct.tamanho,
               from: cdProduct.local,
               cidadeOrigem: cdProduct.cidade,
               to: branchProduct.local,
@@ -142,8 +128,8 @@ const Transferencias = () => {
               quantity: Math.round(quantity),
               fromStock: cdStock,
               toStock: branchStock,
-              toMin: branchMinEstimado,
-              toMax: branchMaxEstimado,
+              toMin: Math.round(branchMinEstimado),
+              toMax: Math.round(branchMaxEstimado),
               priority: branchStock === 0 ? "high" : "medium",
             });
           }
@@ -151,12 +137,12 @@ const Transferencias = () => {
       });
     });
 
-    return transferSuggestions.sort((a, b) => {
+    return redistributionSuggestions.sort((a, b) => {
       if (a.priority === "high" && b.priority !== "high") return -1;
       if (a.priority !== "high" && b.priority === "high") return 1;
       return b.quantity - a.quantity;
     });
-  }, [monthlyData]);
+  }, [latestMonthData]);
 
   // Aplicar filtros
   const filteredSuggestions = useMemo(() => {
@@ -174,7 +160,7 @@ const Transferencias = () => {
     window.print();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="p-8 flex items-center justify-center">
@@ -190,9 +176,9 @@ const Transferencias = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Sugestões de Transferência</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Sugestões de Redistribuição</h1>
             <p className="text-muted-foreground">
-              Otimize o estoque entre locais baseado em demanda e disponibilidade
+              Otimize o estoque entre filiais baseado em demanda e disponibilidade do CD
             </p>
           </div>
           <Button onClick={handlePrint} variant="outline" className="print:hidden">
@@ -257,6 +243,7 @@ const Transferencias = () => {
                   <th className="p-3 font-semibold">Família</th>
                   <th className="p-3 font-semibold">Cor</th>
                   <th className="p-3 font-semibold">Tamanho</th>
+                  <th className="p-3 font-semibold">Origem</th>
                   <th className="p-3 font-semibold">Destino</th>
                   <th className="p-3 font-semibold text-right">Quantidade</th>
                   <th className="p-3 font-semibold print:hidden">Ação</th>
@@ -278,9 +265,17 @@ const Transferencias = () => {
                     <td className="p-3 text-muted-foreground">{suggestion.tamanho || "-"}</td>
                     <td className="p-3">
                       <div>
+                        <div className="font-medium">{suggestion.from}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Estoque: {suggestion.fromStock}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <div>
                         <div className="font-medium">{suggestion.to}</div>
                         <div className="text-xs text-muted-foreground">
-                          Atual: {suggestion.toStock} / Mín: {suggestion.toMin} / Máx: {suggestion.toMax}
+                          Atual: {suggestion.toStock} | Mín: {suggestion.toMin} | Máx: {suggestion.toMax}
                         </div>
                       </div>
                     </td>
@@ -297,7 +292,7 @@ const Transferencias = () => {
 
             {filteredSuggestions.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                Nenhuma sugestão de transferência encontrada com os filtros selecionados.
+                Nenhuma sugestão de redistribuição encontrada com os filtros selecionados.
               </div>
             )}
           </div>
@@ -331,4 +326,4 @@ const Transferencias = () => {
   );
 };
 
-export default Transferencias;
+export default Redistribuicao;
