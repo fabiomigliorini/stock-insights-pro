@@ -5,13 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Search, BarChart3, Loader2 } from "lucide-react";
 import { ProductAnalysis } from "@/components/ProductAnalysis";
 import { Product } from "@/lib/excelParser";
 import { getMonthlyDataForClass } from "@/lib/getMonthlyData";
+import { FilterButton } from "@/components/FilterButton";
 
 export default function Classes() {
   const { products } = useData();
@@ -314,9 +313,9 @@ export default function Classes() {
     <DashboardLayout>
       <div className="p-8 space-y-6 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-3xl font-bold">Análise por Classes</h1>
+          <h1 className="text-3xl font-bold">Análise de Demanda vs Estoque</h1>
           <p className="text-muted-foreground">
-            Visualize métricas agregadas por classe de produtos
+            Selecione pelo menos um filtro para visualizar o gráfico
           </p>
         </div>
 
@@ -369,70 +368,39 @@ export default function Classes() {
             ) : (
               <div className="space-y-6">
                 {/* Header with class name and filters */}
-                <Card className="p-4">
-                  <div className="flex items-center justify-between mb-4">
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold">{selectedClass}</h2>
                     <Badge variant="outline">
                       {classStats?.totalProducts} produto{classStats?.totalProducts !== 1 ? 's' : ''}
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-6">
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Local de Estoque</h3>
-                      <RadioGroup value={selectedLocation} onValueChange={setSelectedLocation} className="flex flex-wrap gap-3">
-                        {locations.map((loc) => (
-                          <div key={loc} className="flex items-center space-x-2">
-                            <RadioGroupItem value={loc} id={`loc-${loc}`} />
-                            <Label htmlFor={`loc-${loc}`} className="text-sm cursor-pointer capitalize">
-                              {loc}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Cor</h3>
-                      <RadioGroup value={selectedColor} onValueChange={setSelectedColor} className="flex flex-wrap gap-3">
-                        {colors.map((cor) => (
-                          <div key={cor} className="flex items-center space-x-2">
-                            <RadioGroupItem value={cor} id={`cor-${cor}`} />
-                            <Label htmlFor={`cor-${cor}`} className="text-sm cursor-pointer capitalize">
-                              {cor}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Tamanho</h3>
-                      <RadioGroup value={selectedSize} onValueChange={setSelectedSize} className="flex flex-wrap gap-3">
-                        {sizes.map((tam) => (
-                          <div key={tam} className="flex items-center space-x-2">
-                            <RadioGroupItem value={tam} id={`tam-${tam}`} />
-                            <Label htmlFor={`tam-${tam}`} className="text-sm cursor-pointer capitalize">
-                              {tam}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Família</h3>
-                      <RadioGroup value={selectedFamily} onValueChange={setSelectedFamily} className="flex flex-wrap gap-3">
-                        {families.map((fam) => (
-                          <div key={fam} className="flex items-center space-x-2">
-                            <RadioGroupItem value={fam} id={`fam-${fam}`} />
-                            <Label htmlFor={`fam-${fam}`} className="text-sm cursor-pointer capitalize">
-                              {fam}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
+                  <div className="flex flex-wrap gap-3">
+                    <FilterButton
+                      label="Local"
+                      value={selectedLocation}
+                      options={locations.filter(l => l !== "todos")}
+                      onChange={setSelectedLocation}
+                    />
+                    <FilterButton
+                      label="Cor"
+                      value={selectedColor}
+                      options={colors.filter(c => c !== "todos")}
+                      onChange={setSelectedColor}
+                    />
+                    <FilterButton
+                      label="Tamanho"
+                      value={selectedSize}
+                      options={sizes.filter(s => s !== "todos")}
+                      onChange={setSelectedSize}
+                    />
+                    <FilterButton
+                      label="Família"
+                      value={selectedFamily}
+                      options={families.filter(f => f !== "todos")}
+                      onChange={setSelectedFamily}
+                    />
                   </div>
                 </Card>
 
