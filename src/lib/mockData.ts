@@ -50,6 +50,10 @@ export const generateLocalData = (): MonthlySale[] => {
 
   produtos.forEach((produto) => {
     produto.tamanhos.forEach((tamanho) => {
+      // SKU único por produto+tamanho (não por local!)
+      const currentSku = String(skuCounter);
+      skuCounter++;
+      
       locais.forEach((localInfo) => {
         const isCD = localInfo.local === "CD";
         
@@ -119,7 +123,7 @@ export const generateLocalData = (): MonthlySale[] => {
             mockData.push({
               ano,
               mes,
-              sku: String(skuCounter),
+              sku: currentSku,
               produto: produto.nome,
               familia: produto.familia,
               classe: produto.classe,
@@ -134,8 +138,6 @@ export const generateLocalData = (): MonthlySale[] => {
             });
           });
         });
-
-        skuCounter++;
       });
     });
   });
