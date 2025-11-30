@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DataProvider } from "@/contexts/DataContext";
 import Import from "./pages/Import";
 import Classes from "./pages/Classes";
-import Redistribuicao from "./pages/Redistribuicao";
+import Distribuicao from "./pages/Distribuicao";
 import Realocacao from "./pages/Realocacao";
 import Compras from "./pages/Compras";
 import TestSheetNames from "./pages/TestSheetNames";
@@ -24,7 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Classes />} />
             <Route path="/import" element={<Import />} />
-            <Route path="/redistribuicao" element={<Redistribuicao />} />
+            <Route path="/distribuicao" element={<Distribuicao />} />
             <Route path="/realocacao" element={<Realocacao />} />
             <Route path="/compras" element={<Compras />} />
             <Route path="/test-sheets" element={<TestSheetNames />} />
