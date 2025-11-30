@@ -154,12 +154,7 @@ export default function Classes() {
     const loadMonthlyData = async () => {
       setLoadingMonthlyData(true);
       try {
-        const data = await getMonthlyDataForClass(
-          selectedClass,
-          selectedFamily !== "todos" ? selectedFamily : undefined,
-          selectedColor !== "todos" ? selectedColor : undefined,
-          selectedSize !== "todos" ? selectedSize : undefined
-        );
+        const data = await getMonthlyDataForClass(selectedClass);
         
         console.log('[Classes] Dados mensais brutos:', data.map(d => ({ ano: d.ano, mes: d.mesNum, label: d.mes })));
 
