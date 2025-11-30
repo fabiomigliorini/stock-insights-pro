@@ -162,19 +162,46 @@ export default function Classes() {
         );
         
         console.log('[Classes] Dados mensais brutos:', data.map(d => ({ ano: d.ano, mes: d.mesNum, label: d.mes })));
+
+        if (!data || data.length === 0) {
+          console.log('[Classes] Nenhum dado mensal encontrado para a combinação de filtros atual');
+          setMonthlyData([]);
+          return;
+        }
+
+        const availableYears = Array.from(new Set(data.map(d => d.ano))).sort();
+        console.log('[Classes] Anos disponíveis na classe:', availableYears);
+
+        // Filtrar por período usando ANOS de calendário (3, 2, 1 ano) + opção de 6 meses
+        const maxYear = Math.max(...data.map(d => d.ano));
+        let filteredHistoricalData = data;
+
+        switch (selectedPeriod) {
+          case "3anos":
+            filteredHistoricalData = data.filter(d => d.ano >= maxYear - 2);
+            break;
+          case "2anos":
+            filteredHistoricalData = data.filter(d => d.ano >= maxYear - 1);
+            break;
+          case "1ano":
+            filteredHistoricalData = data.filter(d => d.ano === maxYear);
+            break;
+          case "6meses":
+            filteredHistoricalData = data.slice(-6);
+            break;
+          case "inicio":
+          default:
+            filteredHistoricalData = data;
+        }
         
-        // Filter by period using last N months
-        const periodMap = {
-          "inicio": 999,
-          "3anos": 36,
-          "2anos": 24,
-          "1ano": 12,
-          "6meses": 6,
-        } as const;
-        const monthsToShow = periodMap[selectedPeriod];
-        const filteredHistoricalData = data.slice(-monthsToShow);
-        
-        console.log('[Classes] Período selecionado:', selectedPeriod, 'total pontos:', data.length, 'exibindo últimos:', filteredHistoricalData.length, 'de', filteredHistoricalData[0]?.mes, 'até', filteredHistoricalData[filteredHistoricalData.length - 1]?.mes);
+        console.log(
+          '[Classes] Período selecionado:',
+          selectedPeriod,
+          '| total pontos:', data.length,
+          '| exibindo:', filteredHistoricalData.length,
+          '| de', filteredHistoricalData[0]?.mes,
+          'até', filteredHistoricalData[filteredHistoricalData.length - 1]?.mes
+        );
         
         // Map filtered historical data
         const chartData = filteredHistoricalData.map(d => ({
