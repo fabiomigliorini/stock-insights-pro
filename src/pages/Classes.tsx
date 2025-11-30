@@ -146,19 +146,8 @@ export default function Classes() {
           selectedSize !== "todos" ? selectedSize : undefined
         );
         
-        // Filter by period
-        const periodMap = {
-          "inicio": 999,
-          "3anos": 36,
-          "2anos": 24,
-          "1ano": 12,
-          "6meses": 6,
-        };
-        const monthsToShow = periodMap[selectedPeriod];
-        const filteredData = data.slice(-monthsToShow);
-        
-        // Map historical data
-        const historicalData = filteredData.map(d => ({
+        // Map ALL historical data first
+        const historicalData = data.map(d => ({
           month: d.mes,
           vendas: d.vendas,
           estoque: d.estoque,
@@ -206,7 +195,18 @@ export default function Classes() {
           }
         }
         
-        setMonthlyData(historicalData);
+        // Now apply period filter to complete data (historical + predictions)
+        const periodMap = {
+          "inicio": 999,
+          "3anos": 36,
+          "2anos": 24,
+          "1ano": 12,
+          "6meses": 6,
+        };
+        const monthsToShow = periodMap[selectedPeriod];
+        const filteredData = historicalData.slice(-monthsToShow);
+        
+        setMonthlyData(filteredData);
       } catch (error) {
         console.error('Erro ao carregar dados mensais:', error);
       } finally {
