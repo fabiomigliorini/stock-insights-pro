@@ -157,7 +157,8 @@ export default function Classes() {
         const monthsToShow = periodMap[selectedPeriod];
         const filteredData = data.slice(-monthsToShow);
         
-        setMonthlyData(filteredData.map(d => ({
+        // Map historical data
+        const historicalData = filteredData.map(d => ({
           month: d.mes,
           vendas: d.vendas,
           estoque: d.estoque,
@@ -165,7 +166,47 @@ export default function Classes() {
           max: d.max,
           seguranca: d.seguranca,
           predicao: undefined,
-        })));
+          estoquePredicao: undefined,
+        }));
+
+        // Calculate predictions for next 6 months
+        if (data.length > 0) {
+          // Use last 3 months to calculate average sales
+          const lastMonths = data.slice(-3);
+          const avgSales = lastMonths.reduce((sum, d) => sum + d.vendas, 0) / lastMonths.length;
+          
+          // Get last month values
+          const lastMonth = data[data.length - 1];
+          const lastStock = lastMonth.estoque;
+          const lastYear = lastMonth.ano;
+          const lastMonthNum = lastMonth.mesNum;
+          
+          // Generate next 6 months
+          const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+          let currentStock = lastStock;
+          
+          for (let i = 1; i <= 6; i++) {
+            const nextMonthNum = ((lastMonthNum + i - 1) % 12) + 1;
+            const nextYear = lastYear + Math.floor((lastMonthNum + i - 1) / 12);
+            const monthLabel = `${monthNames[nextMonthNum - 1]}/${nextYear.toString().slice(-2)} (P)`;
+            
+            // Predicted stock after sales
+            currentStock = Math.max(0, currentStock - avgSales);
+            
+            historicalData.push({
+              month: monthLabel,
+              vendas: undefined,
+              estoque: undefined,
+              min: lastMonth.min,
+              max: lastMonth.max,
+              seguranca: lastMonth.seguranca,
+              predicao: avgSales,
+              estoquePredicao: currentStock,
+            });
+          }
+        }
+        
+        setMonthlyData(historicalData);
       } catch (error) {
         console.error('Erro ao carregar dados mensais:', error);
       } finally {
@@ -416,8 +457,9 @@ export default function Classes() {
                         <Tooltip contentStyle={{ fontSize: 12 }} />
                         <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
                         <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" connectNulls={false} />
-                        <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="Predição" connectNulls={false} />
+                        <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="Vendas (P)" connectNulls={false} />
                         <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" connectNulls={false} />
+                        <Line type="monotone" dataKey="estoquePredicao" stroke="hsl(var(--chart-5))" strokeWidth={2} strokeDasharray="5 5" name="Estoque (P)" connectNulls={false} />
                         <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Máx" />
                         <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Mín" />
                         <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={1.5} strokeDasharray="3 3" name="Segurança" />
