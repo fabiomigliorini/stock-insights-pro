@@ -88,26 +88,30 @@ const Compras = () => {
     [monthlyData]
   );
 
-  // Gerar sugestões de compra: produtos com estoque abaixo do ponto de pedido
+  // Gerar sugestões de compra: produtos com estoque baixo (nova modelagem)
   const suggestions = useMemo(() => {
+    // Nova modelagem: usar 75% da demanda média como ponto de pedido estimado
     const purchaseSuggestions = monthlyData
       .filter(p => {
         const stock = p.estoque_final_mes || 0;
-        const pontoPedido = p.ponto_pedido_mes || 0;
-        
-        // Produto precisa ter ponto de pedido definido e estar abaixo dele
-        return pontoPedido > 0 && stock < pontoPedido;
+        // Não processar produtos sem dados
+        return stock >= 0;
       })
       .map(p => {
         const stock = p.estoque_final_mes || 0;
-        const estoqueMax = p.estoque_maximo_mes || 0;
-        const pontoPedido = p.ponto_pedido_mes || 0;
+        const qtdeVendida = p.qtde_vendida || 0;
+        
+        // Estimar ponto de pedido como 75% das vendas do mês
+        const pontoPedidoEstimado = qtdeVendida * 0.75;
+        
+        // Estimar estoque máximo como 2x as vendas do mês
+        const estoqueMaxEstimado = qtdeVendida * 2;
         
         // Quantidade para comprar = estoque máximo - saldo atual
-        const quantityToOrder = Math.max(0, estoqueMax - stock);
+        const quantityToOrder = Math.max(0, estoqueMaxEstimado - stock);
         
-        // Calcular déficit em relação ao ponto de pedido
-        const deficit = pontoPedido - stock;
+        // Calcular déficit em relação ao ponto de pedido estimado
+        const deficit = pontoPedidoEstimado - stock;
         
         return {
           id: `${p.sku}_${p.local}_${p.cor || ''}_${p.tamanho || ''}`,
@@ -120,8 +124,8 @@ const Compras = () => {
           local: p.local,
           cidade: p.cidade,
           currentStock: stock,
-          pontoPedido: pontoPedido,
-          estoqueMax: estoqueMax,
+          pontoPedido: pontoPedidoEstimado,
+          estoqueMax: estoqueMaxEstimado,
           quantity: Math.round(quantityToOrder),
           priority: deficit > 50 ? "high" : "medium",
           deficit: Math.round(deficit),

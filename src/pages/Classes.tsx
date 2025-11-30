@@ -202,8 +202,6 @@ export default function Classes() {
           month: d.mes,
           vendas: d.vendas,
           estoque: d.estoque,
-          min: d.min,
-          max: d.max,
           predicao: undefined,
           estoquePredicao: undefined,
         }));
@@ -236,8 +234,6 @@ export default function Classes() {
               month: monthLabel,
               vendas: undefined,
               estoque: undefined,
-              min: lastMonth.min,
-              max: lastMonth.max,
               predicao: avgSales,
               estoquePredicao: currentStock,
             });
@@ -491,8 +487,6 @@ export default function Classes() {
                         <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="" legendType="none" connectNulls={false} />
                         <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" connectNulls={false} />
                         <Line type="monotone" dataKey="estoquePredicao" stroke="hsl(var(--chart-5))" strokeWidth={2} strokeDasharray="5 5" name="" legendType="none" connectNulls={false} />
-                        <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Máx" />
-                        <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Mín" />
                       </LineChart>
                     </ResponsiveContainer>
                   )}

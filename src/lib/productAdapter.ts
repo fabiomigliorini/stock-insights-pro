@@ -5,7 +5,7 @@ export interface ProductDisplay {
   id: string;
   sku: string;
   name: string;
-  category: string; // Added to match old Product interface
+  category: string;
   categoria: string;
   stock: number;
   min: number;
@@ -35,8 +35,11 @@ export interface ProductDisplay {
 export function adaptProductStats(stats: ProductStats[]): ProductDisplay[] {
   return stats.map(p => {
     const stock = p.estoque_atual || 0;
-    const min = p.estoque_minimo || 0;
-    const max = p.estoque_maximo || 0;
+    
+    // Sem min/max na nova modelagem, usar valores padrão baseados na demanda
+    const demandaMedia = p.demanda_media || 0;
+    const min = demandaMedia * 0.5; // Estimativa: 50% da demanda média
+    const max = demandaMedia * 2;   // Estimativa: 200% da demanda média
     
     let status: 'low' | 'ok' | 'high' = 'ok';
     if (stock < min) status = 'low';
@@ -46,13 +49,13 @@ export function adaptProductStats(stats: ProductStats[]): ProductDisplay[] {
       id: `${p.sku}-${p.local}`,
       sku: p.sku,
       name: p.produto,
-      category: p.classe || p.familia || 'Geral', // Added
+      category: p.classe || p.familia || 'Geral',
       categoria: p.classe || p.familia || 'Geral',
       stock,
       min,
       max,
-      reorderPoint: p.ponto_pedido || 0,
-      safetyStock: p.estoque_seguranca || 0,
+      reorderPoint: demandaMedia * 0.75, // Estimativa: 75% da demanda média
+      safetyStock: demandaMedia * 0.25,  // Estimativa: 25% da demanda média
       status,
       filial: p.local,
       familia: p.familia,
@@ -66,10 +69,10 @@ export function adaptProductStats(stats: ProductStats[]): ProductDisplay[] {
       demandaStd: p.demanda_std || 0,
       cvDemanda: p.cv_demanda || 0,
       volatilidade: p.volatilidade || 'Baixa',
-      estoqueSeguranca: p.estoque_seguranca || 0,
-      estoqueMinSugerido: p.estoque_minimo || 0,
-      estoqueMaxSugerido: p.estoque_maximo || 0,
-      pontoPedido: p.ponto_pedido || 0,
+      estoqueSeguranca: demandaMedia * 0.25,
+      estoqueMinSugerido: demandaMedia * 0.5,
+      estoqueMaxSugerido: demandaMedia * 2,
+      pontoPedido: demandaMedia * 0.75,
       qtdPedidoSugerida: 0,
     };
   });

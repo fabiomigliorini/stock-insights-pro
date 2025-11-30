@@ -43,17 +43,12 @@ export type Database = {
           cor: string | null
           created_at: string | null
           estoque_final_mes: number | null
-          estoque_inicio_mes: number | null
-          estoque_maximo_mes: number | null
-          estoque_minimo_mes: number | null
-          estoque_seguranca_mes: number | null
           familia: string | null
           id: string
           local: string
           mes: number
-          ponto_pedido_mes: number | null
           produto: string
-          qtde_reposicao: number | null
+          qtde_entregue: number | null
           qtde_vendida: number | null
           sku: string
           subclasse: string | null
@@ -66,17 +61,12 @@ export type Database = {
           cor?: string | null
           created_at?: string | null
           estoque_final_mes?: number | null
-          estoque_inicio_mes?: number | null
-          estoque_maximo_mes?: number | null
-          estoque_minimo_mes?: number | null
-          estoque_seguranca_mes?: number | null
           familia?: string | null
           id?: string
           local: string
           mes: number
-          ponto_pedido_mes?: number | null
           produto: string
-          qtde_reposicao?: number | null
+          qtde_entregue?: number | null
           qtde_vendida?: number | null
           sku: string
           subclasse?: string | null
@@ -89,17 +79,12 @@ export type Database = {
           cor?: string | null
           created_at?: string | null
           estoque_final_mes?: number | null
-          estoque_inicio_mes?: number | null
-          estoque_maximo_mes?: number | null
-          estoque_minimo_mes?: number | null
-          estoque_seguranca_mes?: number | null
           familia?: string | null
           id?: string
           local?: string
           mes?: number
-          ponto_pedido_mes?: number | null
           produto?: string
-          qtde_reposicao?: number | null
+          qtde_entregue?: number | null
           qtde_vendida?: number | null
           sku?: string
           subclasse?: string | null
@@ -118,12 +103,8 @@ export type Database = {
           demanda_media: number | null
           demanda_std: number | null
           estoque_atual: number | null
-          estoque_maximo: number | null
-          estoque_minimo: number | null
-          estoque_seguranca: number | null
           familia: string | null
           local: string | null
-          ponto_pedido: number | null
           produto: string | null
           sku: string | null
           subclasse: string | null

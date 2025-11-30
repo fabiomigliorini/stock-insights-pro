@@ -80,11 +80,9 @@ const Import = () => {
                 <div>• Família, Classe, Subclasse</div>
                 <div>• Cor, Tamanho</div>
                 <div>• Local, Cidade</div>
-                <div>• Estoque Início/Final</div>
                 <div>• Quantidade Vendida</div>
-                <div>• Quantidade Reposição</div>
-                <div>• Estoque Mínimo/Máximo</div>
-                <div>• Ponto de Pedido</div>
+                <div>• Quantidade Entregue</div>
+                <div>• Estoque Final</div>
               </div>
             </Card>
           </TabsContent>

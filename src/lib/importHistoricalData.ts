@@ -12,14 +12,9 @@ export interface MonthlySale {
   tamanho: string | null;
   local: string;
   cidade: string | null;
-  estoque_inicio_mes: number;
   qtde_vendida: number;
-  qtde_reposicao: number;
+  qtde_entregue: number;
   estoque_final_mes: number;
-  estoque_minimo_mes: number;
-  estoque_maximo_mes: number;
-  estoque_seguranca_mes: number;
-  ponto_pedido_mes: number;
 }
 
 export interface ProductStats {
@@ -37,10 +32,6 @@ export interface ProductStats {
   cv_demanda: number;
   volatilidade: string;
   estoque_atual: number;
-  estoque_minimo: number;
-  estoque_maximo: number;
-  estoque_seguranca: number;
-  ponto_pedido: number;
 }
 
 export const importHistoricalData = async (): Promise<{
@@ -68,14 +59,9 @@ export const importHistoricalData = async (): Promise<{
       tamanho: String(row['Tamanho'] || ''),
       local: String(row['Local'] || ''),
       cidade: row['Cidade'] || null,
-      estoque_inicio_mes: Number(row['Estoque_Inicio_Mes']) || 0,
       qtde_vendida: Number(row['Qtde_Vendida']) || 0,
-      qtde_reposicao: Number(row['Qtde_Reposicao']) || 0,
+      qtde_entregue: Number(row['Qtde_Entregue']) || 0,
       estoque_final_mes: Number(row['Estoque_Final_Mes']) || 0,
-      estoque_minimo_mes: Number(row['Estoque_Minimo_Mes']) || 0,
-      estoque_maximo_mes: Number(row['Estoque_Maximo_Mes']) || 0,
-      estoque_seguranca_mes: Number(row['Estoque_Seguranca_Mes']) || 0,
-      ponto_pedido_mes: Number(row['Ponto_Pedido_Mes']) || 0,
     }));
 
     return {
