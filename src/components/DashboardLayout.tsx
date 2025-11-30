@@ -8,7 +8,7 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: "Classes", icon: Layers, href: "/", current: true },
-  { name: "Transferências", icon: Package, href: "/transferencias", current: false },
+  { name: "Redistribuição", icon: Package, href: "/redistribuicao", current: false },
   { name: "Realocação", icon: Repeat, href: "/realocacao", current: false },
   { name: "Compras", icon: ShoppingCart, href: "/compras", current: false },
 ];
