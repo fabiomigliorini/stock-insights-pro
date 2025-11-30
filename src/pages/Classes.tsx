@@ -146,8 +146,19 @@ export default function Classes() {
           selectedSize !== "todos" ? selectedSize : undefined
         );
         
-        // Map ALL historical data first
-        const historicalData = data.map(d => ({
+        // Apply period filter to historical data FIRST
+        const periodMap = {
+          "inicio": 999,
+          "3anos": 36,
+          "2anos": 24,
+          "1ano": 12,
+          "6meses": 6,
+        };
+        const monthsToShow = periodMap[selectedPeriod];
+        const filteredHistoricalData = data.slice(-monthsToShow);
+        
+        // Map filtered historical data
+        const chartData = filteredHistoricalData.map(d => ({
           month: d.mes,
           vendas: d.vendas,
           estoque: d.estoque,
@@ -158,13 +169,13 @@ export default function Classes() {
           estoquePredicao: undefined,
         }));
 
-        // Calculate predictions for next 6 months
+        // Calculate predictions for next 6 months (always show predictions)
         if (data.length > 0) {
-          // Use last 3 months to calculate average sales
+          // Use last 3 months from FULL data to calculate average sales
           const lastMonths = data.slice(-3);
           const avgSales = lastMonths.reduce((sum, d) => sum + d.vendas, 0) / lastMonths.length;
           
-          // Get last month values
+          // Get last month values from FULL data
           const lastMonth = data[data.length - 1];
           const lastStock = lastMonth.estoque;
           const lastYear = lastMonth.ano;
@@ -182,7 +193,7 @@ export default function Classes() {
             // Predicted stock after sales
             currentStock = Math.max(0, currentStock - avgSales);
             
-            historicalData.push({
+            chartData.push({
               month: monthLabel,
               vendas: undefined,
               estoque: undefined,
@@ -195,18 +206,7 @@ export default function Classes() {
           }
         }
         
-        // Now apply period filter to complete data (historical + predictions)
-        const periodMap = {
-          "inicio": 999,
-          "3anos": 36,
-          "2anos": 24,
-          "1ano": 12,
-          "6meses": 6,
-        };
-        const monthsToShow = periodMap[selectedPeriod];
-        const filteredData = historicalData.slice(-monthsToShow);
-        
-        setMonthlyData(filteredData);
+        setMonthlyData(chartData);
       } catch (error) {
         console.error('Erro ao carregar dados mensais:', error);
       } finally {
