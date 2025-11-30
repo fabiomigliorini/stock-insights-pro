@@ -53,15 +53,15 @@ export const generateLocalData = (): MonthlySale[] => {
       locais.forEach((localInfo) => {
         const isCD = localInfo.local === "CD";
         
-        // Estoque inicial maior no CD
+        // Estoque inicial proporcional - CD tem 4-8x mais que lojas
         let estoqueAtual = isCD ? 
-          Math.floor(Math.random() * 5000) + 3000 : 
-          Math.floor(Math.random() * 800) + 200;
+          Math.floor(Math.random() * 500) + 300 : // CD: 300-800
+          Math.floor(Math.random() * 80) + 20;    // Lojas: 20-100
 
         anos.forEach((ano) => {
           meses.forEach((mes) => {
             // Vendas variam por sazonalidade e tipo de produto
-            let baseVendas = isCD ? 0 : Math.floor(Math.random() * 150) + 50;
+            let baseVendas = isCD ? 0 : Math.floor(Math.random() * 50) + 30; // 30-80 unidades
             
             // Sazonalidade: mais vendas no verão para bermudas, inverno para jaquetas
             if (produto.classe === "Bermuda" && (mes >= 11 || mes <= 3)) {
@@ -74,24 +74,44 @@ export const generateLocalData = (): MonthlySale[] => {
 
             const qtdeVendida = Math.floor(baseVendas);
 
-            // CD faz compras periódicas grandes, lojas recebem transferências
+            // Lógica de reposição inteligente baseada em cobertura de estoque
             let qtdeEntregue = 0;
             if (isCD) {
-              // CD compra a cada 3 meses
+              // CD compra a cada 3 meses, quantidade proporcional ao consumo das lojas
               if (mes % 3 === 1) {
-                qtdeEntregue = Math.floor(Math.random() * 3000) + 2000;
+                qtdeEntregue = Math.floor(Math.random() * 300) + 200; // 200-500
               }
             } else {
-              // Lojas recebem transferências mensais
-              qtdeEntregue = Math.floor(Math.random() * 200) + 100;
+              // Lojas recebem transferências baseadas na cobertura de estoque
+              const vendaMedia = qtdeVendida; // Aproximação da venda mensal
+              const coberturaAtual = vendaMedia > 0 ? estoqueAtual / vendaMedia : 2;
+              
+              // Se cobertura < 1 mês, recebe transferência maior
+              if (coberturaAtual < 1) {
+                qtdeEntregue = Math.floor(Math.random() * 50) + 40; // 40-90
+              } 
+              // Se cobertura entre 1-2 meses, recebe transferência moderada
+              else if (coberturaAtual < 2) {
+                qtdeEntregue = Math.floor(Math.random() * 30) + 20; // 20-50
+              }
+              // Se cobertura > 3 meses, não recebe transferência
+              else if (coberturaAtual > 3) {
+                qtdeEntregue = 0;
+              }
+              // Cobertura ok (2-3 meses), transferência pequena
+              else {
+                qtdeEntregue = Math.floor(Math.random() * 20) + 10; // 10-30
+              }
             }
 
             // Calcula estoque final
             estoqueAtual = estoqueAtual - qtdeVendida + qtdeEntregue;
             
-            // Evita estoque negativo
+            // Evita estoque negativo (reposição emergencial)
             if (estoqueAtual < 0) {
-              estoqueAtual = Math.floor(Math.random() * 100) + 50;
+              const reposicaoEmergencial = Math.floor(Math.random() * 40) + 30;
+              estoqueAtual = reposicaoEmergencial;
+              qtdeEntregue += reposicaoEmergencial; // Registra a reposição emergencial
             }
 
             mockData.push({
