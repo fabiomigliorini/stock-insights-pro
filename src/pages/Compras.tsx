@@ -2,19 +2,14 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Printer, ShoppingCart } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
-import { useAutoLoad } from "@/hooks/useAutoLoad";
-import { supabase } from "@/integrations/supabase/client";
-import { MonthlySale } from "@/lib/importHistoricalData";
+import { Printer, ShoppingCart, Loader2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { useMockData } from "@/hooks/useMockData";
 import { FilterButton } from "@/components/FilterButton";
 
 const Compras = () => {
-  useAutoLoad();
+  const { mockData, isLoading } = useMockData();
   
-  const [monthlyData, setMonthlyData] = useState<MonthlySale[]>([]);
-  const [loading, setLoading] = useState(true);
-
   // Filtros
   const [selectedClasse, setSelectedClasse] = useState<string>("all");
   const [selectedFamilia, setSelectedFamilia] = useState<string>("all");
@@ -22,45 +17,17 @@ const Compras = () => {
   const [selectedCor, setSelectedCor] = useState<string>("all");
   const [selectedLocal, setSelectedLocal] = useState<string>("all");
 
-  // Buscar dados do último mês disponível
-  useEffect(() => {
-    const fetchLatestMonthData = async () => {
-      try {
-        setLoading(true);
-        
-        // Buscar o último mês/ano disponível
-        const { data: latestData, error: latestError } = await supabase
-          .from('monthly_sales')
-          .select('ano, mes')
-          .order('ano', { ascending: false })
-          .order('mes', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (latestError) throw latestError;
-        if (!latestData) {
-          setLoading(false);
-          return;
-        }
-
-        // Buscar todos os dados desse mês
-        const { data, error } = await supabase
-          .from('monthly_sales')
-          .select('*')
-          .eq('ano', latestData.ano)
-          .eq('mes', latestData.mes);
-
-        if (error) throw error;
-        setMonthlyData(data || []);
-      } catch (error) {
-        console.error('Erro ao buscar dados mensais:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLatestMonthData();
-  }, []);
+  // Pegar dados do último mês disponível dos dados mock
+  const monthlyData = useMemo(() => {
+    if (mockData.length === 0) return [];
+    
+    // Encontrar o último mês/ano disponível
+    const maxYear = Math.max(...mockData.map(d => d.ano));
+    const maxMonth = Math.max(...mockData.filter(d => d.ano === maxYear).map(d => d.mes));
+    
+    // Retornar apenas dados desse mês
+    return mockData.filter(d => d.ano === maxYear && d.mes === maxMonth);
+  }, [mockData]);
 
   // Extrair valores únicos para os filtros
   const classes = useMemo(() => 
@@ -164,11 +131,14 @@ const Compras = () => {
     [filteredSuggestions]
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="p-8 flex items-center justify-center">
-          <p className="text-muted-foreground">Carregando dados...</p>
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Carregando dados...</p>
+          </div>
         </div>
       </DashboardLayout>
     );
