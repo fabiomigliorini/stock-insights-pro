@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useData } from "@/contexts/DataContext";
-import { useAutoLoad } from "@/hooks/useAutoLoad";
+import { useMockData } from "@/hooks/useMockData";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,12 +9,11 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { Search, BarChart3, Loader2, TrendingUp, Package, ShoppingCart } from "lucide-react";
 import { ProductAnalysis } from "@/components/ProductAnalysis";
 import { Product } from "@/lib/excelParser";
-import { getMonthlyDataForClass } from "@/lib/getMonthlyData";
+import { getMonthlyDataFromMock } from "@/lib/getMonthlyDataFromMock";
 import { FilterButton } from "@/components/FilterButton";
 
 export default function Classes() {
-  const { products, isLoading: dataLoading } = useData();
-  const { isLoading: autoLoadLoading } = useAutoLoad();
+  const { mockData, products, isLoading } = useMockData();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("todos");
@@ -70,33 +68,34 @@ export default function Classes() {
     return products.filter(p => p.classe === selectedClass);
   }, [products, selectedClass]);
 
-  // Get unique locations for the selected class
+  // Get unique locations, colors, sizes, families from mock data for the selected class
   const locations = useMemo(() => {
     if (!selectedClass) return ["todos"];
-    const locs = [...new Set(classProducts.map(p => p.local).filter(Boolean))];
-    return ["todos", ...locs];
-  }, [classProducts, selectedClass]);
+    const classData = mockData.filter(d => d.classe === selectedClass);
+    const locs = [...new Set(classData.map(d => d.local).filter(Boolean))];
+    return ["todos", ...locs.sort()];
+  }, [mockData, selectedClass]);
 
-  // Get unique colors for the selected class
   const colors = useMemo(() => {
     if (!selectedClass) return ["todos"];
-    const cols = [...new Set(classProducts.map(p => p.cor).filter(Boolean))];
-    return ["todos", ...cols];
-  }, [classProducts, selectedClass]);
+    const classData = mockData.filter(d => d.classe === selectedClass);
+    const cols = [...new Set(classData.map(d => d.cor).filter(Boolean))];
+    return ["todos", ...cols.sort()];
+  }, [mockData, selectedClass]);
 
-  // Get unique sizes for the selected class
   const sizes = useMemo(() => {
     if (!selectedClass) return ["todos"];
-    const szs = [...new Set(classProducts.map(p => p.tamanho).filter(Boolean))];
-    return ["todos", ...szs];
-  }, [classProducts, selectedClass]);
+    const classData = mockData.filter(d => d.classe === selectedClass);
+    const szs = [...new Set(classData.map(d => d.tamanho).filter(Boolean))];
+    return ["todos", ...szs.sort()];
+  }, [mockData, selectedClass]);
 
-  // Get unique families for the selected class
   const families = useMemo(() => {
     if (!selectedClass) return ["todos"];
-    const fams = [...new Set(classProducts.map(p => p.familia).filter(Boolean))];
-    return ["todos", ...fams];
-  }, [classProducts, selectedClass]);
+    const classData = mockData.filter(d => d.classe === selectedClass);
+    const fams = [...new Set(classData.map(d => d.familia).filter(Boolean))];
+    return ["todos", ...fams.sort()];
+  }, [mockData, selectedClass]);
 
   // Filter products by location, color, size, and family
   const filteredProducts = useMemo(() => {
@@ -116,177 +115,190 @@ export default function Classes() {
     return filtered;
   }, [classProducts, selectedLocation, selectedColor, selectedSize, selectedFamily]);
 
-  // Calculate aggregated stats
+  // Calculate aggregated stats from mock data
   const classStats = useMemo(() => {
-    if (filteredProducts.length === 0) return null;
-    
-    const totalDemanda = filteredProducts.reduce((sum, p) => sum + (p.demandaMedia || 0), 0);
-    const avgDemanda = totalDemanda / filteredProducts.length;
-    const totalEstoque = filteredProducts.reduce((sum, p) => sum + (p.stock || 0), 0);
-    const totalMin = filteredProducts.reduce((sum, p) => sum + (p.estoqueMinSugerido || 0), 0);
-    const totalMax = filteredProducts.reduce((sum, p) => sum + (p.estoqueMaxSugerido || 0), 0);
-    
-    // Volatilidade predominante
-    const volatilidades = filteredProducts.map(p => p.volatilidade || 'Baixa');
-    const volatilityCount = volatilidades.reduce((acc, v) => {
-      acc[v] = (acc[v] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    const predominantVolatility = Object.entries(volatilityCount).sort((a, b) => b[1] - a[1])[0][0];
+    if (!selectedClass) return null;
 
+    let filtered = mockData.filter(d => d.classe === selectedClass);
+    
+    if (selectedFamily !== "todos") {
+      filtered = filtered.filter(d => d.familia === selectedFamily);
+    }
+    if (selectedColor !== "todos") {
+      filtered = filtered.filter(d => d.cor === selectedColor);
+    }
+    if (selectedSize !== "todos") {
+      filtered = filtered.filter(d => d.tamanho === selectedSize);
+    }
+    if (selectedLocation !== "todos") {
+      filtered = filtered.filter(d => d.local === selectedLocation);
+    }
+    
+    const totalDemanda = filtered.reduce((sum, d) => sum + d.qtde_vendida, 0);
+    const totalEstoque = filtered.reduce((sum, d) => sum + d.estoque_final_mes, 0);
+    const avgSales = filtered.length > 0 ? filtered.reduce((sum, d) => sum + d.qtde_vendida, 0) / filtered.length : 0;
+    const totalMin = avgSales * 0.5;
+    const totalMax = avgSales * 2.0;
+    
     return {
-      totalProducts: filteredProducts.length,
+      totalProducts: new Set(filtered.map(d => `${d.sku}-${d.local}`)).size,
       totalDemanda,
-      avgDemanda,
+      avgDemanda: avgSales,
       totalEstoque,
       totalMin,
       totalMax,
-      predominantVolatility,
+      predominantVolatility: "Média",
     };
-  }, [filteredProducts]);
+  }, [mockData, selectedClass, selectedFamily, selectedColor, selectedSize, selectedLocation]);
 
-  // Calculate total purchases from monthly data
-  const totalCompras = useMemo(() => {
-    if (!monthlyData || monthlyData.length === 0) return 0;
-    // Sum only historical data (exclude predictions)
-    return monthlyData
-      .filter(d => d.compras !== undefined)
-      .reduce((sum, d) => sum + (d.compras || 0), 0);
-  }, [monthlyData]);
+  // Calculate big numbers from mock data for selected class and filters
+  const bigNumbers = useMemo(() => {
+    if (!selectedClass) return { totalVendas: 0, totalEstoque: 0, totalCompras: 0 };
 
-  // Monthly data with historical sales and future predictions
+    let filtered = mockData.filter(d => d.classe === selectedClass);
+    
+    if (selectedFamily !== "todos") {
+      filtered = filtered.filter(d => d.familia === selectedFamily);
+    }
+    if (selectedColor !== "todos") {
+      filtered = filtered.filter(d => d.cor === selectedColor);
+    }
+    if (selectedSize !== "todos") {
+      filtered = filtered.filter(d => d.tamanho === selectedSize);
+    }
+    if (selectedLocation !== "todos") {
+      filtered = filtered.filter(d => d.local === selectedLocation);
+    }
+
+    const totalVendas = filtered.reduce((sum, d) => sum + d.qtde_vendida, 0);
+    const totalEstoque = filtered.reduce((sum, d) => sum + d.estoque_final_mes, 0);
+    const totalCompras = filtered.reduce((sum, d) => sum + d.qtde_entregue, 0);
+
+    return { totalVendas, totalEstoque, totalCompras };
+  }, [mockData, selectedClass, selectedFamily, selectedColor, selectedSize, selectedLocation]);
+
+  // Load monthly data from mock when class or filters change
   useEffect(() => {
     if (!selectedClass) {
       setMonthlyData([]);
       return;
     }
     
-    const loadMonthlyData = async () => {
-      setLoadingMonthlyData(true);
-      try {
-        const data = await getMonthlyDataForClass(selectedClass);
-        
-        console.log('[Classes] Dados mensais brutos:', data.map(d => ({ ano: d.ano, mes: d.mesNum, label: d.mes })));
-
-        if (!data || data.length === 0) {
-          console.log('[Classes] Nenhum dado mensal encontrado para a combinação de filtros atual');
-          setMonthlyData([]);
-          return;
-        }
-
-        const availableYears = Array.from(new Set(data.map(d => d.ano))).sort();
-        console.log('[Classes] Anos disponíveis na classe:', availableYears);
-
-        // Filtrar por período usando ANOS de calendário (3, 2, 1 ano) + opção de 6 meses
-        const maxYear = Math.max(...data.map(d => d.ano));
-        let filteredHistoricalData = data;
-
-        switch (selectedPeriod) {
-          case "3anos":
-            filteredHistoricalData = data.filter(d => d.ano >= maxYear - 2);
-            break;
-          case "2anos":
-            filteredHistoricalData = data.filter(d => d.ano >= maxYear - 1);
-            break;
-          case "1ano":
-            filteredHistoricalData = data.filter(d => d.ano === maxYear);
-            break;
-          case "6meses":
-            filteredHistoricalData = data.slice(-6);
-            break;
-          case "inicio":
-          default:
-            filteredHistoricalData = data;
-        }
-        
-        console.log(
-          '[Classes] Período selecionado:',
-          selectedPeriod,
-          '| total pontos:', data.length,
-          '| exibindo:', filteredHistoricalData.length,
-          '| de', filteredHistoricalData[0]?.mes,
-          'até', filteredHistoricalData[filteredHistoricalData.length - 1]?.mes
-        );
-        
-        // Map filtered historical data
-        const chartData = filteredHistoricalData.map(d => ({
-          month: d.mes,
-          vendas: d.vendas,
-          estoque: d.estoque,
-          compras: d.compras,
-          estoqueMin: d.estoqueMin,
-          estoqueMax: d.estoqueMax,
-          predicao: undefined,
-          estoquePredicao: undefined,
-        }));
-
-        // Calculate predictions for next 6 months (always show predictions)
-        if (data.length > 0) {
-          // Use last 3 months from FULL data to calculate average sales
-          const lastMonths = data.slice(-3);
-          const avgSales = lastMonths.reduce((sum, d) => sum + d.vendas, 0) / lastMonths.length;
-          
-          // Get last month values from FULL data
-          const lastMonth = data[data.length - 1];
-          const lastStock = lastMonth.estoque;
-          const lastYear = lastMonth.ano;
-          const lastMonthNum = lastMonth.mesNum;
-          
-          // Generate next 6 months
-          const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-          let currentStock = lastStock;
-          
-          for (let i = 1; i <= 6; i++) {
-            const nextMonthNum = ((lastMonthNum + i - 1) % 12) + 1;
-            const nextYear = lastYear + Math.floor((lastMonthNum + i - 1) / 12);
-            const monthLabel = `${monthNames[nextMonthNum - 1]}/${nextYear.toString().slice(-2)} (P)`;
-            
-            // Predicted stock after sales
-            currentStock = Math.max(0, currentStock - avgSales);
-            
-            // Calcular estoque mín/máx projetado baseado na previsão de vendas
-            const estoqueMinProjetado = avgSales * 0.5;  // 50% da previsão
-            const estoqueMaxProjetado = avgSales * 2;     // 200% da previsão
-            
-            chartData.push({
-              month: monthLabel,
-              vendas: undefined,
-              estoque: undefined,
-              compras: undefined,
-              estoqueMin: estoqueMinProjetado,
-              estoqueMax: estoqueMaxProjetado,
-              predicao: avgSales,
-              estoquePredicao: currentStock,
-            });
-          }
-        }
-        
-        setMonthlyData(chartData);
-      } catch (error) {
-        console.error('Erro ao carregar dados mensais:', error);
-      } finally {
-        setLoadingMonthlyData(false);
-      }
-    };
-
-    loadMonthlyData();
-  }, [selectedClass, selectedFamily, selectedColor, selectedSize, selectedPeriod]);
-
-  // Branch data
-  const branchData = useMemo(() => {
-    if (filteredProducts.length === 0) return [];
+    setLoadingMonthlyData(true);
     
-    const branches = filteredProducts
-      .filter(p => p.local)
-      .reduce((acc, p) => {
-        const local = p.local || "Outros";
-        if (!acc[local]) {
-          acc[local] = { vendas: 0, estoque: 0 };
-        }
-        acc[local].vendas += p.demandaMedia || 0;
-        acc[local].estoque += p.stock || 0;
-        return acc;
-      }, {} as Record<string, { vendas: number; estoque: number }>);
+    const data = getMonthlyDataFromMock(
+      mockData,
+      selectedClass,
+      selectedFamily !== "todos" ? selectedFamily : undefined,
+      selectedColor !== "todos" ? selectedColor : undefined,
+      selectedSize !== "todos" ? selectedSize : undefined
+    );
+
+    if (!data || data.length === 0) {
+      setMonthlyData([]);
+      setLoadingMonthlyData(false);
+      return;
+    }
+
+    // Filter by period
+    const maxYear = Math.max(...data.map(d => d.year));
+    let filteredHistoricalData = data;
+
+    switch (selectedPeriod) {
+      case "3anos":
+        filteredHistoricalData = data.filter(d => d.year >= maxYear - 2);
+        break;
+      case "2anos":
+        filteredHistoricalData = data.filter(d => d.year >= maxYear - 1);
+        break;
+      case "1ano":
+        filteredHistoricalData = data.filter(d => d.year === maxYear);
+        break;
+      case "6meses":
+        filteredHistoricalData = data.slice(-6);
+        break;
+      case "inicio":
+      default:
+        filteredHistoricalData = data;
+    }
+
+    // Map to chart format
+    const chartData = filteredHistoricalData.map(d => ({
+      month: d.month,
+      vendas: d.sales,
+      estoque: d.stock,
+      compras: d.purchases,
+      estoqueMin: d.minStock,
+      estoqueMax: d.maxStock,
+      predicao: undefined,
+      estoquePredicao: undefined,
+    }));
+
+    // Calculate predictions for next 6 months
+    if (data.length > 0) {
+      const lastMonths = data.slice(-3);
+      const avgSales = lastMonths.reduce((sum, d) => sum + d.sales, 0) / lastMonths.length;
+      
+      const lastMonth = data[data.length - 1];
+      const lastStock = lastMonth.stock;
+      const lastYear = lastMonth.year;
+      const lastMonthNum = parseInt(lastMonth.month.split('-')[1]);
+      
+      const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      let currentStock = lastStock;
+      
+      for (let i = 1; i <= 6; i++) {
+        const nextMonthNum = ((lastMonthNum + i - 1) % 12) + 1;
+        const nextYear = lastYear + Math.floor((lastMonthNum + i - 1) / 12);
+        const monthLabel = `${monthNames[nextMonthNum - 1]}/${nextYear.toString().slice(-2)} (P)`;
+        
+        currentStock = Math.max(0, currentStock - avgSales);
+        
+        const estoqueMinProjetado = avgSales * 0.5;
+        const estoqueMaxProjetado = avgSales * 2;
+        
+        chartData.push({
+          month: monthLabel,
+          vendas: undefined,
+          estoque: undefined,
+          compras: undefined,
+          estoqueMin: estoqueMinProjetado,
+          estoqueMax: estoqueMaxProjetado,
+          predicao: avgSales,
+          estoquePredicao: currentStock,
+        });
+      }
+    }
+    
+    setMonthlyData(chartData);
+    setLoadingMonthlyData(false);
+  }, [mockData, selectedClass, selectedFamily, selectedColor, selectedSize, selectedPeriod]);
+
+  // Branch data from mock data
+  const branchData = useMemo(() => {
+    if (!selectedClass) return [];
+    
+    let filtered = mockData.filter(d => d.classe === selectedClass);
+    
+    if (selectedFamily !== "todos") {
+      filtered = filtered.filter(d => d.familia === selectedFamily);
+    }
+    if (selectedColor !== "todos") {
+      filtered = filtered.filter(d => d.cor === selectedColor);
+    }
+    if (selectedSize !== "todos") {
+      filtered = filtered.filter(d => d.tamanho === selectedSize);
+    }
+    
+    const branches = filtered.reduce((acc, d) => {
+      const local = d.local || "Outros";
+      if (!acc[local]) {
+        acc[local] = { vendas: 0, estoque: 0 };
+      }
+      acc[local].vendas += d.qtde_vendida;
+      acc[local].estoque += d.estoque_final_mes;
+      return acc;
+    }, {} as Record<string, { vendas: number; estoque: number }>);
 
     return Object.entries(branches)
       .map(([name, data]) => ({
@@ -295,7 +307,7 @@ export default function Classes() {
         estoque: data.estoque,
       }))
       .sort((a, b) => b.vendas - a.vendas);
-  }, [filteredProducts]);
+  }, [mockData, selectedClass, selectedFamily, selectedColor, selectedSize]);
 
   // Branch distribution
   const branchDistribution = useMemo(() => {
@@ -334,7 +346,7 @@ export default function Classes() {
           </p>
         </div>
 
-        {(dataLoading || autoLoadLoading) ? (
+        {isLoading ? (
           <Card className="p-8 flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -464,7 +476,7 @@ export default function Classes() {
                       <div>
                         <p className="text-sm font-semibold text-purple-700 dark:text-purple-400 mb-2">Total de Compras</p>
                         <p className="text-4xl font-bold text-purple-900 dark:text-purple-100">
-                          {totalCompras.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                          {bigNumbers.totalCompras.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                         </p>
                       </div>
                       <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -603,14 +615,37 @@ export default function Classes() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredProducts.map((product) => (
-                          <tr key={product.id} className="border-b hover:bg-accent/50">
+                        {filteredProducts.map((product, index) => (
+                          <tr key={`${product.sku}-${product.local}-${index}`} className="border-b hover:bg-accent/50">
                             <td className="p-2 text-center">
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => {
-                                  setSelectedProduct(product);
+                                  // Convert MockProduct to Product for ProductAnalysis
+                                  const productForAnalysis: Product = {
+                                    id: `${product.sku}-${product.local}`,
+                                    sku: product.sku,
+                                    name: product.produto,
+                                    category: product.classe,
+                                    familia: product.familia,
+                                    cor: product.cor,
+                                    tamanho: product.tamanho,
+                                    local: product.local,
+                                    stock: product.estoque_atual,
+                                    demandaMedia: product.demanda_media,
+                                    volatilidade: product.volatilidade,
+                                    estoqueMinSugerido: product.demanda_media * 0.5,
+                                    estoqueMaxSugerido: product.demanda_media * 2.0,
+                                    min: product.demanda_media * 0.5,
+                                    max: product.demanda_media * 2.0,
+                                    reorderPoint: product.demanda_media * 0.75,
+                                    safetyStock: product.demanda_media * 0.25,
+                                    status: product.estoque_atual < product.demanda_media * 0.5 ? 'low' : 
+                                            product.estoque_atual > product.demanda_media * 2.0 ? 'high' : 'ok',
+                                    filial: product.local,
+                                  };
+                                  setSelectedProduct(productForAnalysis);
                                   setAnalysisOpen(true);
                                 }}
                               >
@@ -618,13 +653,13 @@ export default function Classes() {
                               </Button>
                             </td>
                             <td className="p-2 font-mono text-xs">{product.sku}</td>
-                            <td className="p-2">{product.name}</td>
+                            <td className="p-2">{product.produto}</td>
                             <td className="p-2 text-muted-foreground">{product.familia || "-"}</td>
                             <td className="p-2 capitalize">{product.cor || "-"}</td>
                             <td className="p-2 capitalize">{product.tamanho || "-"}</td>
                             <td className="p-2">{product.local}</td>
-                            <td className="p-2 text-right font-medium">{product.stock?.toFixed(0) || 0}</td>
-                            <td className="p-2 text-right">{product.demandaMedia?.toFixed(1) || 0}</td>
+                            <td className="p-2 text-right font-medium">{product.estoque_atual?.toFixed(0) || 0}</td>
+                            <td className="p-2 text-right">{product.demanda_media?.toFixed(1) || 0}</td>
                             <td className="p-2">
                               <Badge 
                                 variant={
@@ -651,7 +686,28 @@ export default function Classes() {
 
         <ProductAnalysis
           product={selectedProduct}
-          allProducts={products}
+          allProducts={filteredProducts.map(p => ({
+            id: `${p.sku}-${p.local}`,
+            sku: p.sku,
+            name: p.produto,
+            category: p.classe,
+            familia: p.familia,
+            cor: p.cor,
+            tamanho: p.tamanho,
+            local: p.local,
+            stock: p.estoque_atual,
+            demandaMedia: p.demanda_media,
+            volatilidade: p.volatilidade,
+            estoqueMinSugerido: p.demanda_media * 0.5,
+            estoqueMaxSugerido: p.demanda_media * 2.0,
+            min: p.demanda_media * 0.5,
+            max: p.demanda_media * 2.0,
+            reorderPoint: p.demanda_media * 0.75,
+            safetyStock: p.demanda_media * 0.25,
+            status: p.estoque_atual < p.demanda_media * 0.5 ? 'low' : 
+                    p.estoque_atual > p.demanda_media * 2.0 ? 'high' : 'ok',
+            filial: p.local,
+          }))}
           open={analysisOpen}
           onOpenChange={setAnalysisOpen}
         />
