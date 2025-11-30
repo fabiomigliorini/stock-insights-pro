@@ -238,21 +238,29 @@ export default function Classes() {
     if (data.length > 0) {
       const lastMonths = data.slice(-3);
       const avgSales = lastMonths.reduce((sum, d) => sum + d.sales, 0) / lastMonths.length;
+      const avgPurchases = lastMonths.reduce((sum, d) => sum + d.purchases, 0) / lastMonths.length;
+      
+      // Calcular tendência histórica: proporção estoque/vendas (cobertura)
+      const stockCoverageRatios = lastMonths
+        .filter(d => d.sales > 0)
+        .map(d => d.stock / d.sales);
+      const avgStockCoverage = stockCoverageRatios.length > 0 
+        ? stockCoverageRatios.reduce((sum, r) => sum + r, 0) / stockCoverageRatios.length 
+        : 1.3; // Default: 30% acima das vendas
       
       const lastMonth = data[data.length - 1];
-      const lastStock = lastMonth.stock;
       const lastYear = lastMonth.year;
       const lastMonthNum = parseInt(lastMonth.month.split('-')[1]);
       
       const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-      let currentStock = lastStock;
       
       for (let i = 1; i <= 6; i++) {
         const nextMonthNum = ((lastMonthNum + i - 1) % 12) + 1;
         const nextYear = lastYear + Math.floor((lastMonthNum + i - 1) / 12);
         const monthLabel = `${monthNames[nextMonthNum - 1]}/${nextYear.toString().slice(-2)} (P)`;
         
-        currentStock = Math.max(0, currentStock - avgSales);
+        // Projetar estoque baseado na tendência histórica de cobertura
+        const stockProjetado = avgSales * avgStockCoverage;
         
         const estoqueMinProjetado = avgSales * 0.5;
         const estoqueMaxProjetado = avgSales * 2;
@@ -265,7 +273,7 @@ export default function Classes() {
           estoqueMin: estoqueMinProjetado,
           estoqueMax: estoqueMaxProjetado,
           predicao: avgSales,
-          estoquePredicao: currentStock,
+          estoquePredicao: stockProjetado,
         });
       }
     }
