@@ -27,6 +27,21 @@ export default function Classes() {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [loadingMonthlyData, setLoadingMonthlyData] = useState(false);
 
+  // Calculate period display text
+  const periodDisplayText = useMemo(() => {
+    if (!monthlyData || monthlyData.length === 0) return "";
+    
+    // Filter out predictions (with "(P)" suffix)
+    const historicalData = monthlyData.filter(d => !d.month.includes("(P)"));
+    if (historicalData.length === 0) return "";
+    
+    const firstMonth = historicalData[0].month;
+    const lastMonth = historicalData[historicalData.length - 1].month;
+    const totalMonths = historicalData.length;
+    
+    return `Período exibido: ${firstMonth} – ${lastMonth} (${totalMonths} ${totalMonths === 1 ? 'mês' : 'meses'})`;
+  }, [monthlyData]);
+
   // Reset filters when class changes
   useEffect(() => {
     setSelectedLocation("todos");
@@ -447,6 +462,9 @@ export default function Classes() {
                         6 MESES
                       </span>
                     </div>
+                    {periodDisplayText && (
+                      <p className="text-xs text-muted-foreground mb-2">{periodDisplayText}</p>
+                    )}
                   </div>
                   {loadingMonthlyData ? (
                     <div className="flex items-center justify-center h-[250px]">
