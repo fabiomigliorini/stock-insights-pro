@@ -77,7 +77,12 @@ const Redistribuicao = () => {
 
   // Gerar sugestões de redistribuição
   const suggestions = useMemo(() => {
-    if (!latestMonthData.length) return [];
+    if (!latestMonthData.length) {
+      console.log('❌ Redistribuição: Sem dados do último mês');
+      return [];
+    }
+    
+    console.log(`📊 Redistribuição: Processando ${latestMonthData.length} registros do último mês`);
     
     // Agrupar produtos por SKU
     const productMap = new Map<string, typeof latestMonthData>();
@@ -89,13 +94,24 @@ const Redistribuicao = () => {
       productMap.get(p.sku)!.push(p);
     });
 
+    console.log(`📦 Redistribuição: ${productMap.size} SKUs únicos encontrados`);
+
     const redistributionSuggestions: RedistribuicaoSuggestion[] = [];
+    let skusComCD = 0;
+    let skusComEstoqueCD = 0;
+    let tentativasGeracao = 0;
 
     // Para cada grupo de produtos (mesmo SKU)
-    productMap.forEach((productsByLocation) => {
+    productMap.forEach((productsByLocation, sku) => {
       // Encontrar o CD
       const cdProduct = productsByLocation.find(p => p.local === 'CD');
-      if (!cdProduct || cdProduct.estoque_final_mes <= 10) return; // CD precisa ter estoque mínimo
+      if (!cdProduct) return;
+      
+      skusComCD++;
+      
+      if (cdProduct.estoque_final_mes <= 0) return;
+      
+      skusComEstoqueCD++;
 
       // Para cada filial
       const branches = productsByLocation.filter(p => p.local !== 'CD');
@@ -107,18 +123,20 @@ const Redistribuicao = () => {
         // Calcular demanda média (usar vendas ou valor padrão)
         const demandaMedia = branchVendas > 0 ? branchVendas : 40;
 
-        // Estoque ideal: 1.2x demanda (20% acima das vendas para segurança)
-        const estoqueIdeal = Math.round(demandaMedia * 1.2);
-        const branchMinEstimado = Math.round(demandaMedia * 0.6); // 60% das vendas
+        // Estoque ideal: 1.3x demanda (30% acima das vendas)
+        const estoqueIdeal = Math.round(demandaMedia * 1.3);
+        const branchMinEstimado = Math.round(demandaMedia * 0.7); // 70% das vendas
         const branchMaxEstimado = Math.round(demandaMedia * 1.5); // 150% das vendas
 
         // Calcular necessidade de reposição
         const deficit = estoqueIdeal - branchStock;
 
-        // Gerar sugestão se há deficit significativo (mais de 10 unidades)
-        if (deficit > 10) {
-          // Quantidade a redistribuir: MIN(deficit, 50% do estoque CD)
-          const maxFromCD = Math.floor(cdStock * 0.5); // Não tirar mais que 50% do CD
+        tentativasGeracao++;
+
+        // Gerar sugestão se há deficit (qualquer deficit positivo)
+        if (deficit > 5 && cdStock > 5) {
+          // Quantidade a redistribuir: MIN(deficit, 40% do estoque CD)
+          const maxFromCD = Math.max(5, Math.floor(cdStock * 0.4));
           const quantity = Math.min(deficit, maxFromCD);
 
           if (quantity > 0) {
@@ -151,6 +169,12 @@ const Redistribuicao = () => {
         }
       });
     });
+
+    console.log(`🔍 Redistribuição - Análise:`);
+    console.log(`  - SKUs com CD: ${skusComCD}`);
+    console.log(`  - SKUs com estoque no CD: ${skusComEstoqueCD}`);
+    console.log(`  - Tentativas de geração: ${tentativasGeracao}`);
+    console.log(`  - Sugestões geradas: ${redistributionSuggestions.length}`);
 
     // Ordenar por prioridade e quantidade
     return redistributionSuggestions.sort((a, b) => {
@@ -196,6 +220,11 @@ const Redistribuicao = () => {
             <p className="text-muted-foreground">
               Otimize o estoque entre filiais baseado em demanda e disponibilidade do CD
             </p>
+            {latestMonthData.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Analisando {latestMonthData.length} registros do último mês disponível
+              </p>
+            )}
           </div>
           <Button onClick={handlePrint} variant="outline" className="print:hidden">
             <Printer className="h-4 w-4 mr-2" />
