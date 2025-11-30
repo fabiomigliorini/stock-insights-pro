@@ -7,7 +7,7 @@ import { useState, useMemo } from "react";
 import { useMockData } from "@/hooks/useMockData";
 import { FilterButton } from "@/components/FilterButton";
 
-interface RedistribuicaoSuggestion {
+interface DistribuicaoSuggestion {
   id: string;
   sku: string;
   produto: string;
@@ -27,7 +27,7 @@ interface RedistribuicaoSuggestion {
   priority: "high" | "medium";
 }
 
-const Redistribuicao = () => {
+const Distribuicao = () => {
   const { mockData, isLoading } = useMockData();
   
   // Filtros
@@ -75,14 +75,14 @@ const Redistribuicao = () => {
     [latestMonthData]
   );
 
-  // Gerar sugestões de redistribuição
+  // Gerar sugestões de distribuição
   const suggestions = useMemo(() => {
     if (!latestMonthData.length) {
-      console.log('❌ Redistribuição: Sem dados do último mês');
+      console.log('❌ Distribuição: Sem dados do último mês');
       return [];
     }
     
-    console.log(`📊 Redistribuição: Processando ${latestMonthData.length} registros do último mês`);
+    console.log(`📊 Distribuição: Processando ${latestMonthData.length} registros do último mês`);
     
     // Agrupar produtos por SKU
     const productMap = new Map<string, typeof latestMonthData>();
@@ -94,9 +94,9 @@ const Redistribuicao = () => {
       productMap.get(p.sku)!.push(p);
     });
 
-    console.log(`📦 Redistribuição: ${productMap.size} SKUs únicos encontrados`);
+    console.log(`📦 Distribuição: ${productMap.size} SKUs únicos encontrados`);
 
-    const redistributionSuggestions: RedistribuicaoSuggestion[] = [];
+    const distributionSuggestions: DistribuicaoSuggestion[] = [];
     let skusComCD = 0;
     let skusComEstoqueCD = 0;
     let tentativasGeracao = 0;
@@ -146,7 +146,7 @@ const Redistribuicao = () => {
               priority = "high"; // Abaixo do mínimo crítico
             }
 
-            redistributionSuggestions.push({
+            distributionSuggestions.push({
               id: `${cdProduct.sku}_${cdProduct.local}_${branchProduct.local}`,
               sku: cdProduct.sku,
               produto: cdProduct.produto,
@@ -170,14 +170,14 @@ const Redistribuicao = () => {
       });
     });
 
-    console.log(`🔍 Redistribuição - Análise:`);
+    console.log(`🔍 Distribuição - Análise:`);
     console.log(`  - SKUs com CD: ${skusComCD}`);
     console.log(`  - SKUs com estoque no CD: ${skusComEstoqueCD}`);
     console.log(`  - Tentativas de geração: ${tentativasGeracao}`);
-    console.log(`  - Sugestões geradas: ${redistributionSuggestions.length}`);
+    console.log(`  - Sugestões geradas: ${distributionSuggestions.length}`);
 
     // Ordenar por prioridade e quantidade
-    return redistributionSuggestions.sort((a, b) => {
+    return distributionSuggestions.sort((a, b) => {
       if (a.priority === "high" && b.priority !== "high") return -1;
       if (a.priority !== "high" && b.priority === "high") return 1;
       return b.quantity - a.quantity;
@@ -216,7 +216,7 @@ const Redistribuicao = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Sugestões de Redistribuição</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Sugestões de Distribuição</h1>
             <p className="text-muted-foreground">
               Otimize o estoque entre filiais baseado em demanda e disponibilidade do CD
             </p>
@@ -337,7 +337,7 @@ const Redistribuicao = () => {
 
             {filteredSuggestions.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                Nenhuma sugestão de redistribuição encontrada com os filtros selecionados.
+                Nenhuma sugestão de distribuição encontrada com os filtros selecionados.
               </div>
             )}
           </div>
@@ -371,4 +371,4 @@ const Redistribuicao = () => {
   );
 };
 
-export default Redistribuicao;
+export default Distribuicao;

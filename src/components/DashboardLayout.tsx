@@ -8,9 +8,9 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: "Classes", icon: Layers, href: "/", current: true },
-  { name: "Redistribuição", icon: Package, href: "/redistribuicao", current: false },
-  { name: "Realocação", icon: Repeat, href: "/realocacao", current: false },
   { name: "Compras", icon: ShoppingCart, href: "/compras", current: false },
+  { name: "Distribuição", icon: Package, href: "/distribuicao", current: false },
+  { name: "Realocação", icon: Repeat, href: "/realocacao", current: false },
 ];
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
