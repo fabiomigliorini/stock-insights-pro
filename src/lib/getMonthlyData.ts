@@ -7,9 +7,6 @@ export interface MonthlyDataPoint {
   mesNum: number;
   vendas: number;
   estoque: number;
-  min: number;
-  max: number;
-  pontoPedido: number;
 }
 
 /**
@@ -54,16 +51,10 @@ export async function getMonthlyDataForSKU(
           mes: row.mes,
           vendas: 0,
           estoque: 0,
-          min: 0,
-          max: 0,
-          pontoPedido: 0,
         };
       }
       acc[key].vendas += row.qtde_vendida || 0;
       acc[key].estoque += row.estoque_final_mes || 0;
-      acc[key].min += row.estoque_minimo_mes || 0;
-      acc[key].max += row.estoque_maximo_mes || 0;
-      acc[key].pontoPedido += row.ponto_pedido_mes || 0;
       return acc;
     }, {});
 
@@ -77,9 +68,6 @@ export async function getMonthlyDataForSKU(
         mesNum: group.mes,
         vendas: group.vendas,
         estoque: group.estoque,
-        min: group.min,
-        max: group.max,
-        pontoPedido: group.pontoPedido,
       }));
   } catch (error) {
     console.error('Erro ao buscar dados mensais:', error);
@@ -138,17 +126,11 @@ export async function getMonthlyDataForClass(
           mes: row.mes,
           vendas: 0,
           estoque: 0,
-          min: 0,
-          max: 0,
-          pontoPedido: 0,
           count: 0,
         };
       }
       acc[key].vendas += row.qtde_vendida || 0;
       acc[key].estoque += row.estoque_final_mes || 0;
-      acc[key].min += row.estoque_minimo_mes || 0;
-      acc[key].max += row.estoque_maximo_mes || 0;
-      acc[key].pontoPedido += row.ponto_pedido_mes || 0;
       acc[key].count += 1;
       return acc;
     }, {});
@@ -163,9 +145,6 @@ export async function getMonthlyDataForClass(
         mesNum: group.mes,
         vendas: group.vendas,
         estoque: group.estoque,
-        min: group.min,
-        max: group.max,
-        pontoPedido: group.pontoPedido,
       }));
 
     console.log('[getMonthlyDataForClass] Total de pontos mensais após agrupamento:', result.length);

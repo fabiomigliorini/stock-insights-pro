@@ -181,9 +181,13 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const getLowStockCount = () => {
-    return productStats.filter(p => 
-      (p.estoque_atual || 0) < (p.estoque_minimo || 0)
-    ).length;
+    // Nova modelagem não tem estoque mínimo, usar 50% da demanda média como referência
+    return productStats.filter(p => {
+      const stock = p.estoque_atual || 0;
+      const demandaMedia = p.demanda_media || 0;
+      const minEstimado = demandaMedia * 0.5;
+      return stock < minEstimado;
+    }).length;
   };
 
   return (

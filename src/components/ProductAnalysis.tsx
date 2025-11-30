@@ -93,8 +93,6 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
           month: d.mes,
           vendas: d.vendas,
           estoque: d.estoque,
-          min: d.min,
-          max: d.max,
         })));
       } catch (error) {
         console.error('Erro ao carregar dados mensais:', error);
@@ -273,8 +271,6 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                       <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
                       <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" />
                       <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" />
-                      <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Máx" />
-                      <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Mín" />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
@@ -367,16 +363,12 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
               </div>
               <div className="grid grid-cols-4 gap-4 text-sm pt-4 border-t">
                 <div>
-                  <p className="text-muted-foreground">Estoque Mínimo</p>
-                  <p className="font-medium">{product.estoqueMinSugerido?.toFixed(0) || product.min?.toFixed(0) || '-'}</p>
+                  <p className="text-muted-foreground">Demanda Média</p>
+                  <p className="font-medium">{product.demandaMedia?.toFixed(0) || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Estoque Máximo</p>
-                  <p className="font-medium">{product.estoqueMaxSugerido?.toFixed(0) || product.max?.toFixed(0) || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Ponto de Pedido</p>
-                  <p className="font-medium">{product.pontoPedido?.toFixed(0) || '-'}</p>
+                  <p className="text-muted-foreground">Coeficiente de Variação</p>
+                  <p className="font-medium">{product.cvDemanda?.toFixed(2) || '-'}</p>
                 </div>
               </div>
             </Card>

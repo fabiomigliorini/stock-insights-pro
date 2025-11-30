@@ -121,18 +121,20 @@ const Realocacao = () => {
 
     // Para cada grupo de produtos (mesmo SKU+Cor+Tamanho)
     productMap.forEach((productsByLocation, key) => {
-      // Encontrar filiais com estoque acima do máximo (possíveis origens)
+      // Encontrar filiais com estoque acima do máximo estimado (possíveis origens)
       const originsWithSurplus = productsByLocation.filter(p => {
         const stock = p.estoque_final_mes || 0;
-        const max = p.estoque_maximo_mes || 0;
-        return stock > max;
+        const vendas = p.qtde_vendida || 0;
+        const maxEstimado = vendas * 2; // 2x vendas como máximo
+        return stock > maxEstimado;
       });
 
-      // Encontrar filiais com estoque abaixo do ponto de pedido (possíveis destinos)
+      // Encontrar filiais com estoque abaixo do ponto de pedido estimado (possíveis destinos)
       const destinationsWithDeficit = productsByLocation.filter(p => {
         const stock = p.estoque_final_mes || 0;
-        const pontoPedido = p.ponto_pedido_mes || 0;
-        return pontoPedido > 0 && stock < pontoPedido;
+        const vendas = p.qtde_vendida || 0;
+        const pontoPedidoEstimado = vendas * 0.75; // 75% vendas como ponto pedido
+        return pontoPedidoEstimado > 0 && stock < pontoPedidoEstimado;
       });
       
       totalOriginsWithSurplus += originsWithSurplus.length;
@@ -145,15 +147,18 @@ const Realocacao = () => {
           if (origin.local === destination.local) return;
 
           const originStock = origin.estoque_final_mes || 0;
-          const originMax = origin.estoque_maximo_mes || 0;
+          const originVendas = origin.qtde_vendida || 0;
           const destStock = destination.estoque_final_mes || 0;
-          const destPontoPedido = destination.ponto_pedido_mes || 0;
+          const destVendas = destination.qtde_vendida || 0;
 
-          // Excedente na origem = estoque - máximo
-          const surplus = originStock - originMax;
+          const originMaxEstimado = originVendas * 2;
+          const destPontoPedidoEstimado = destVendas * 0.75;
+
+          // Excedente na origem = estoque - máximo estimado
+          const surplus = originStock - originMaxEstimado;
           
           // Déficit no destino = ponto de pedido - estoque
-          const deficit = destPontoPedido - destStock;
+          const deficit = destPontoPedidoEstimado - destStock;
           
           // Quantidade a transferir = MIN(excedente na origem, déficit no destino)
           const quantity = Math.min(surplus, deficit);
@@ -170,11 +175,11 @@ const Realocacao = () => {
               from: origin.local,
               cidadeOrigem: origin.cidade,
               fromStock: originStock,
-              fromMax: originMax,
+              fromMax: originMaxEstimado,
               to: destination.local,
               cidadeDestino: destination.cidade,
               toStock: destStock,
-              toPontoPedido: destPontoPedido,
+              toPontoPedido: destPontoPedidoEstimado,
               quantity: Math.round(quantity),
               priority: deficit > 50 ? "high" : "medium",
             });

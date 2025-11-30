@@ -113,14 +113,17 @@ const Transferencias = () => {
       const branches = productsByLocation.filter(p => p.local !== 'CD');
       branches.forEach(branchProduct => {
         const branchStock = branchProduct.estoque_final_mes || 0;
-        const branchMin = branchProduct.estoque_minimo_mes || 0;
-        const branchMax = branchProduct.estoque_maximo_mes || 0;
+        const branchVendas = branchProduct.qtde_vendida || 0;
         const cdStock = cdProduct.estoque_final_mes || 0;
 
-        // Se a filial está abaixo do mínimo
-        if (branchStock < branchMin) {
+        // Estimar mínimo como 50% das vendas e máximo como 2x vendas
+        const branchMinEstimado = branchVendas * 0.5;
+        const branchMaxEstimado = branchVendas * 2;
+
+        // Se a filial está abaixo do mínimo estimado
+        if (branchStock < branchMinEstimado) {
           // Quantidade a transferir = MIN(max_filial - saldo_filial, saldo_cd)
-          const quantityNeeded = branchMax - branchStock;
+          const quantityNeeded = branchMaxEstimado - branchStock;
           const quantity = Math.min(quantityNeeded, cdStock);
 
           if (quantity > 0) {
@@ -139,8 +142,8 @@ const Transferencias = () => {
               quantity: Math.round(quantity),
               fromStock: cdStock,
               toStock: branchStock,
-              toMin: branchMin,
-              toMax: branchMax,
+              toMin: branchMinEstimado,
+              toMax: branchMaxEstimado,
               priority: branchStock === 0 ? "high" : "medium",
             });
           }
