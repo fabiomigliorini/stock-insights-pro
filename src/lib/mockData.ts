@@ -53,10 +53,10 @@ export const generateLocalData = (): MonthlySale[] => {
       locais.forEach((localInfo) => {
         const isCD = localInfo.local === "CD";
         
-        // Estoque inicial baixo - próximo de 1 mês de venda
+        // Estoque inicial baixo para criar situações de redistribuição
         let estoqueAtual = isCD ? 
-          Math.floor(Math.random() * 100) + 50 :  // CD: 50-150
-          Math.floor(Math.random() * 40) + 30;    // Lojas: 30-70
+          Math.floor(Math.random() * 120) + 80 :  // CD: 80-200
+          Math.floor(Math.random() * 25) + 15;    // Lojas: 15-40 (bem baixo)
 
         anos.forEach((ano) => {
           meses.forEach((mes) => {
@@ -74,30 +74,28 @@ export const generateLocalData = (): MonthlySale[] => {
 
             const qtdeVendida = Math.floor(baseVendas);
 
-            // Lógica de reposição: manter estoque próximo das vendas (~30% acima)
+            // Lógica de reposição: criar deficit intencional para redistribuição
             let qtdeEntregue = 0;
             if (isCD) {
-              // CD compra a cada 2 meses, quantidade similar às vendas mensais das lojas
+              // CD compra a cada 2 meses
               if (mes % 2 === 1) {
                 qtdeEntregue = Math.floor(Math.random() * 80) + 40; // 40-120
               }
             } else {
-              // Lojas recebem transferências para manter estoque em ~1 mês de venda
+              // Lojas recebem transferências INSUFICIENTES para criar necessidade de redistribuição
               const vendaMedia = qtdeVendida;
-              const estoqueIdeal = vendaMedia * 1.2; // 20% acima da venda
+              const estoqueIdeal = vendaMedia * 1.3; // 30% acima da venda
               const deficit = estoqueIdeal - estoqueAtual;
               
-              // Criar variabilidade: algumas filiais recebem menos que o necessário
-              const receberReposicao = Math.random() > 0.3; // 70% das vezes recebe reposição
+              // Apenas 50% das vezes recebe reposição, e quando recebe é parcial
+              const receberReposicao = Math.random() > 0.5;
               
-              if (receberReposicao && deficit > 10) {
-                // Repõe apenas 60-80% do deficit para manter necessidade de redistribuição
-                const percentualReposicao = 0.6 + Math.random() * 0.2;
+              if (receberReposicao && deficit > 5) {
+                // Repõe apenas 40-70% do deficit para garantir necessidade contínua
+                const percentualReposicao = 0.4 + Math.random() * 0.3;
                 qtdeEntregue = Math.floor(deficit * percentualReposicao);
-              } else if (deficit > 0) {
-                // Pequena reposição ocasional
-                qtdeEntregue = Math.floor(Math.random() * 10);
               } else {
+                // Sem reposição para criar mais deficit
                 qtdeEntregue = 0;
               }
             }
