@@ -1,7 +1,8 @@
 import { MonthlySale } from "./importHistoricalData";
 
-// Dados mocados realistas para demonstração do sistema
-export const generateMockData = (): MonthlySale[] => {
+// Gera dados locais realistas automaticamente para demonstração
+// Usado quando não há dados importados no sistema
+export const generateLocalData = (): MonthlySale[] => {
   const mockData: MonthlySale[] = [];
   
   // Produtos de exemplo com diferentes características
@@ -102,6 +103,9 @@ export const generateMockData = (): MonthlySale[] => {
     });
   });
 
-  console.log(`✅ Gerados ${mockData.length} registros mocados`);
+  console.log(`✅ Gerados ${mockData.length} registros locais para visualização`);
   return mockData;
 };
+
+// Mantém compatibilidade com código existente
+export const generateMockData = generateLocalData;

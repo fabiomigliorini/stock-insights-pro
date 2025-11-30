@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useData } from "@/contexts/DataContext";
+import { useAutoLoad } from "@/hooks/useAutoLoad";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,8 @@ import { getMonthlyDataForClass } from "@/lib/getMonthlyData";
 import { FilterButton } from "@/components/FilterButton";
 
 export default function Classes() {
-  const { products } = useData();
+  const { products, isLoading: dataLoading } = useData();
+  const { isLoading: autoLoadLoading } = useAutoLoad();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("todos");
@@ -328,10 +330,18 @@ export default function Classes() {
         <div>
           <h1 className="text-3xl font-bold">Análise de Demanda vs Estoque</h1>
           <p className="text-muted-foreground">
-            Selecione pelo menos um filtro para visualizar o gráfico
+            Visualize vendas, compras e estoque por classe de produto
           </p>
         </div>
 
+        {(dataLoading || autoLoadLoading) ? (
+          <Card className="p-8 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Carregando dados...</p>
+            </div>
+          </Card>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar - Class Selection */}
           <Card className="p-4 lg:col-span-1">
@@ -637,6 +647,7 @@ export default function Classes() {
             )}
           </div>
         </div>
+        )}
 
         <ProductAnalysis
           product={selectedProduct}
