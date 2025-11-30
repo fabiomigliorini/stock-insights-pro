@@ -549,7 +549,7 @@ export default function Classes() {
                         <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
                         <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" connectNulls={false} />
                         <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="" legendType="none" connectNulls={false} />
-                        <Line type="monotone" dataKey="compras" stroke="hsl(var(--chart-6))" strokeWidth={2} name="Compras" connectNulls={false} />
+                        <Line type="monotone" dataKey="compras" stroke="#9333ea" strokeWidth={3} name="Compras" connectNulls={false} dot={{ fill: "#9333ea", r: 3 }} />
                         <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" connectNulls={false} />
                         <Line type="monotone" dataKey="estoquePredicao" stroke="hsl(var(--chart-5))" strokeWidth={2} strokeDasharray="5 5" name="" legendType="none" connectNulls={false} />
                         <Line type="monotone" dataKey="estoqueMax" stroke="hsl(var(--chart-3))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Máx" />
