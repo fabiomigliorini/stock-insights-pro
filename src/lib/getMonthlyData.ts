@@ -7,6 +7,9 @@ export interface MonthlyDataPoint {
   mesNum: number;
   vendas: number;
   estoque: number;
+  compras: number;
+  estoqueMin: number;
+  estoqueMax: number;
 }
 
 /**
@@ -51,10 +54,12 @@ export async function getMonthlyDataForSKU(
           mes: row.mes,
           vendas: 0,
           estoque: 0,
+          compras: 0,
         };
       }
       acc[key].vendas += row.qtde_vendida || 0;
       acc[key].estoque += row.estoque_final_mes || 0;
+      acc[key].compras += row.qtde_entregue || 0;
       return acc;
     }, {});
 
@@ -62,13 +67,22 @@ export async function getMonthlyDataForSKU(
 
     return Object.values(grouped)
       .sort((a: any, b: any) => a.ano - b.ano || a.mes - b.mes)
-      .map((group: any) => ({
-        mes: `${monthNames[group.mes - 1]}/${group.ano.toString().slice(-2)}`,
-        ano: group.ano,
-        mesNum: group.mes,
-        vendas: group.vendas,
-        estoque: group.estoque,
-      }));
+      .map((group: any) => {
+        // Calcular estoque mín/máx baseado na demanda do mês
+        const estoqueMin = group.vendas * 0.5;  // 50% das vendas
+        const estoqueMax = group.vendas * 2;     // 200% das vendas
+        
+        return {
+          mes: `${monthNames[group.mes - 1]}/${group.ano.toString().slice(-2)}`,
+          ano: group.ano,
+          mesNum: group.mes,
+          vendas: group.vendas,
+          estoque: group.estoque,
+          compras: group.compras,
+          estoqueMin,
+          estoqueMax,
+        };
+      });
   } catch (error) {
     console.error('Erro ao buscar dados mensais:', error);
     return [];
@@ -126,11 +140,13 @@ export async function getMonthlyDataForClass(
           mes: row.mes,
           vendas: 0,
           estoque: 0,
+          compras: 0,
           count: 0,
         };
       }
       acc[key].vendas += row.qtde_vendida || 0;
       acc[key].estoque += row.estoque_final_mes || 0;
+      acc[key].compras += row.qtde_entregue || 0;
       acc[key].count += 1;
       return acc;
     }, {});
@@ -139,13 +155,22 @@ export async function getMonthlyDataForClass(
 
     const result = Object.values(grouped)
       .sort((a: any, b: any) => a.ano - b.ano || a.mes - b.mes)
-      .map((group: any) => ({
-        mes: `${monthNames[group.mes - 1]}/${group.ano.toString().slice(-2)}`,
-        ano: group.ano,
-        mesNum: group.mes,
-        vendas: group.vendas,
-        estoque: group.estoque,
-      }));
+      .map((group: any) => {
+        // Calcular estoque mín/máx baseado na demanda agregada do mês
+        const estoqueMin = group.vendas * 0.5;  // 50% das vendas
+        const estoqueMax = group.vendas * 2;     // 200% das vendas
+        
+        return {
+          mes: `${monthNames[group.mes - 1]}/${group.ano.toString().slice(-2)}`,
+          ano: group.ano,
+          mesNum: group.mes,
+          vendas: group.vendas,
+          estoque: group.estoque,
+          compras: group.compras,
+          estoqueMin,
+          estoqueMax,
+        };
+      });
 
     console.log('[getMonthlyDataForClass] Total de pontos mensais após agrupamento:', result.length);
     console.log('[getMonthlyDataForClass] Anos únicos no resultado:', [...new Set(result.map(d => d.ano))].sort());

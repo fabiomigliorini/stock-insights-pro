@@ -202,6 +202,9 @@ export default function Classes() {
           month: d.mes,
           vendas: d.vendas,
           estoque: d.estoque,
+          compras: d.compras,
+          estoqueMin: d.estoqueMin,
+          estoqueMax: d.estoqueMax,
           predicao: undefined,
           estoquePredicao: undefined,
         }));
@@ -230,10 +233,17 @@ export default function Classes() {
             // Predicted stock after sales
             currentStock = Math.max(0, currentStock - avgSales);
             
+            // Calcular estoque mín/máx projetado baseado na previsão de vendas
+            const estoqueMinProjetado = avgSales * 0.5;  // 50% da previsão
+            const estoqueMaxProjetado = avgSales * 2;     // 200% da previsão
+            
             chartData.push({
               month: monthLabel,
               vendas: undefined,
               estoque: undefined,
+              compras: undefined,
+              estoqueMin: estoqueMinProjetado,
+              estoqueMax: estoqueMaxProjetado,
               predicao: avgSales,
               estoquePredicao: currentStock,
             });
@@ -485,8 +495,11 @@ export default function Classes() {
                         <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
                         <Line type="monotone" dataKey="vendas" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Vendas" connectNulls={false} />
                         <Line type="monotone" dataKey="predicao" stroke="hsl(var(--chart-1))" strokeWidth={2} strokeDasharray="5 5" name="" legendType="none" connectNulls={false} />
+                        <Line type="monotone" dataKey="compras" stroke="hsl(var(--chart-6))" strokeWidth={2} name="Compras" connectNulls={false} />
                         <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" connectNulls={false} />
                         <Line type="monotone" dataKey="estoquePredicao" stroke="hsl(var(--chart-5))" strokeWidth={2} strokeDasharray="5 5" name="" legendType="none" connectNulls={false} />
+                        <Line type="monotone" dataKey="estoqueMax" stroke="hsl(var(--chart-3))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Máx" />
+                        <Line type="monotone" dataKey="estoqueMin" stroke="hsl(var(--chart-2))" strokeWidth={1.5} strokeDasharray="5 5" name="Estoque Mín" />
                       </LineChart>
                     </ResponsiveContainer>
                   )}
