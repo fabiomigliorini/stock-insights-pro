@@ -53,10 +53,10 @@ export const generateLocalData = (): MonthlySale[] => {
       locais.forEach((localInfo) => {
         const isCD = localInfo.local === "CD";
         
-        // Estoque inicial proporcional - CD tem 4-8x mais que lojas
+        // Estoque inicial baixo - próximo de 1 mês de venda
         let estoqueAtual = isCD ? 
-          Math.floor(Math.random() * 500) + 300 : // CD: 300-800
-          Math.floor(Math.random() * 80) + 20;    // Lojas: 20-100
+          Math.floor(Math.random() * 100) + 50 :  // CD: 50-150
+          Math.floor(Math.random() * 40) + 30;    // Lojas: 30-70
 
         anos.forEach((ano) => {
           meses.forEach((mes) => {
@@ -74,44 +74,47 @@ export const generateLocalData = (): MonthlySale[] => {
 
             const qtdeVendida = Math.floor(baseVendas);
 
-            // Lógica de reposição inteligente baseada em cobertura de estoque
+            // Lógica de reposição: manter estoque próximo das vendas (~30% acima)
             let qtdeEntregue = 0;
             if (isCD) {
-              // CD compra a cada 3 meses, quantidade proporcional ao consumo das lojas
-              if (mes % 3 === 1) {
-                qtdeEntregue = Math.floor(Math.random() * 300) + 200; // 200-500
+              // CD compra a cada 2 meses, quantidade similar às vendas mensais das lojas
+              if (mes % 2 === 1) {
+                qtdeEntregue = Math.floor(Math.random() * 80) + 40; // 40-120
               }
             } else {
-              // Lojas recebem transferências baseadas na cobertura de estoque
-              const vendaMedia = qtdeVendida; // Aproximação da venda mensal
-              const coberturaAtual = vendaMedia > 0 ? estoqueAtual / vendaMedia : 2;
+              // Lojas recebem transferências para manter estoque em ~1 mês de venda
+              const vendaMedia = qtdeVendida;
+              const estoqueIdeal = vendaMedia * 1.3; // 30% acima da venda
+              const deficit = estoqueIdeal - estoqueAtual;
               
-              // Se cobertura < 1 mês, recebe transferência maior
-              if (coberturaAtual < 1) {
-                qtdeEntregue = Math.floor(Math.random() * 50) + 40; // 40-90
+              // Se estoque está abaixo do ideal, repõe próximo da venda mensal
+              if (deficit > 10) {
+                qtdeEntregue = Math.floor(vendaMedia * 0.8 + Math.random() * vendaMedia * 0.4); // 80-120% da venda
               } 
-              // Se cobertura entre 1-2 meses, recebe transferência moderada
-              else if (coberturaAtual < 2) {
-                qtdeEntregue = Math.floor(Math.random() * 30) + 20; // 20-50
+              // Pequena reposição se próximo do ideal
+              else if (deficit > 0) {
+                qtdeEntregue = Math.floor(Math.random() * 15) + 5; // 5-20
               }
-              // Se cobertura > 3 meses, não recebe transferência
-              else if (coberturaAtual > 3) {
-                qtdeEntregue = 0;
-              }
-              // Cobertura ok (2-3 meses), transferência pequena
+              // Sem reposição se estoque acima do ideal
               else {
-                qtdeEntregue = Math.floor(Math.random() * 20) + 10; // 10-30
+                qtdeEntregue = 0;
               }
             }
 
             // Calcula estoque final
             estoqueAtual = estoqueAtual - qtdeVendida + qtdeEntregue;
             
-            // Evita estoque negativo (reposição emergencial)
+            // Evita estoque negativo (reposição emergencial mínima)
             if (estoqueAtual < 0) {
-              const reposicaoEmergencial = Math.floor(Math.random() * 40) + 30;
+              const reposicaoEmergencial = Math.floor(qtdeVendida * 1.2); // 120% da venda
               estoqueAtual = reposicaoEmergencial;
-              qtdeEntregue += reposicaoEmergencial; // Registra a reposição emergencial
+              qtdeEntregue += reposicaoEmergencial;
+            }
+            
+            // Limita estoque máximo a ~1.5x a venda para manter proporcionalidade
+            const estoqueMaximo = qtdeVendida * 1.5;
+            if (estoqueAtual > estoqueMaximo && qtdeVendida > 0) {
+              estoqueAtual = Math.floor(estoqueMaximo);
             }
 
             mockData.push({
