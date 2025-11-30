@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Search, BarChart3, Loader2, TrendingUp, Package } from "lucide-react";
+import { Search, BarChart3, Loader2, TrendingUp, Package, ShoppingCart } from "lucide-react";
 import { ProductAnalysis } from "@/components/ProductAnalysis";
 import { Product } from "@/lib/excelParser";
 import { getMonthlyDataForClass } from "@/lib/getMonthlyData";
@@ -142,6 +142,15 @@ export default function Classes() {
       predominantVolatility,
     };
   }, [filteredProducts]);
+
+  // Calculate total purchases from monthly data
+  const totalCompras = useMemo(() => {
+    if (!monthlyData || monthlyData.length === 0) return 0;
+    // Sum only historical data (exclude predictions)
+    return monthlyData
+      .filter(d => d.compras !== undefined)
+      .reduce((sum, d) => sum + (d.compras || 0), 0);
+  }, [monthlyData]);
 
   // Monthly data with historical sales and future predictions
   useEffect(() => {
@@ -409,7 +418,7 @@ export default function Classes() {
                 </Card>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-3 gap-6">
                   <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 dark:from-green-950/20 dark:to-emerald-950/20 dark:border-green-900">
                     <div className="flex items-start justify-between mb-4">
                       <div>
@@ -438,6 +447,21 @@ export default function Classes() {
                       </div>
                     </div>
                     <p className="text-xs text-blue-600 dark:text-blue-500">Unidades em estoque (filtrado)</p>
+                  </Card>
+
+                  <Card className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 dark:from-purple-950/20 dark:to-violet-950/20 dark:border-purple-900">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <p className="text-sm font-semibold text-purple-700 dark:text-purple-400 mb-2">Total de Compras</p>
+                        <p className="text-4xl font-bold text-purple-900 dark:text-purple-100">
+                          {totalCompras.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                        <ShoppingCart className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-purple-600 dark:text-purple-500">Unidades recebidas (período)</p>
                   </Card>
                 </div>
 
