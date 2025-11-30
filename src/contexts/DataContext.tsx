@@ -162,17 +162,42 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
 
   const clear = async () => {
     try {
-      await supabase.from('monthly_sales').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await supabase.from('branches').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      setIsLoading(true);
+      
+      // Delete all monthly_sales records
+      const { error: salesError } = await supabase
+        .from('monthly_sales')
+        .delete()
+        .not('id', 'is', null);
+      
+      if (salesError) {
+        console.error('Error clearing monthly_sales:', salesError);
+        throw salesError;
+      }
+
+      // Delete all branches records
+      const { error: branchesError } = await supabase
+        .from('branches')
+        .delete()
+        .not('id', 'is', null);
+      
+      if (branchesError) {
+        console.error('Error clearing branches:', branchesError);
+        throw branchesError;
+      }
       
       setMonthlySalesState([]);
       setProductStats([]);
+      setProducts([]);
       setBranches([]);
 
-      toast.success('Dados limpos');
+      toast.success('Todos os dados foram excluídos com sucesso');
     } catch (error) {
       console.error('Error clearing database:', error);
-      toast.error('Erro ao limpar dados');
+      toast.error('Erro ao limpar dados do banco');
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 

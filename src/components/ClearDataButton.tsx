@@ -23,10 +23,10 @@ export const ClearDataButton = () => {
     setLoading(true);
     try {
       await clear();
-      toast.success("Dados limpos com sucesso!");
+      // Don't show additional toast as clear() already shows one
     } catch (error) {
       console.error("Erro ao limpar dados:", error);
-      toast.error("Erro ao limpar dados");
+      // Error toast is already shown in clear()
     } finally {
       setLoading(false);
     }
