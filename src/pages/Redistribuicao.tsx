@@ -77,6 +77,8 @@ const Redistribuicao = () => {
 
   // Gerar sugestões de redistribuição
   const suggestions = useMemo(() => {
+    if (!latestMonthData.length) return [];
+    
     // Agrupar produtos por SKU
     const productMap = new Map<string, typeof latestMonthData>();
     
@@ -93,60 +95,64 @@ const Redistribuicao = () => {
     productMap.forEach((productsByLocation) => {
       // Encontrar o CD
       const cdProduct = productsByLocation.find(p => p.local === 'CD');
-      if (!cdProduct) return;
+      if (!cdProduct || cdProduct.estoque_final_mes <= 10) return; // CD precisa ter estoque mínimo
 
       // Para cada filial
       const branches = productsByLocation.filter(p => p.local !== 'CD');
       branches.forEach(branchProduct => {
-        const branchStock = branchProduct.estoque_final_mes;
-        const branchVendas = branchProduct.qtde_vendida;
-        const cdStock = cdProduct.estoque_final_mes;
+        const branchStock = branchProduct.estoque_final_mes || 0;
+        const branchVendas = branchProduct.qtde_vendida || 0;
+        const cdStock = cdProduct.estoque_final_mes || 0;
 
-        // Se não houve vendas, usar média geral de vendas do produto
-        const avgVendas = branchVendas > 0 ? branchVendas : 50;
+        // Calcular demanda média (usar vendas ou valor padrão)
+        const demandaMedia = branchVendas > 0 ? branchVendas : 40;
 
-        // Estoque ideal: 1.3x vendas (30% acima das vendas)
-        const estoqueIdeal = Math.round(avgVendas * 1.3);
-        const branchMinEstimado = Math.round(avgVendas * 0.75); // 75% das vendas
-        const branchMaxEstimado = Math.round(avgVendas * 1.5);   // 150% das vendas
+        // Estoque ideal: 1.2x demanda (20% acima das vendas para segurança)
+        const estoqueIdeal = Math.round(demandaMedia * 1.2);
+        const branchMinEstimado = Math.round(demandaMedia * 0.6); // 60% das vendas
+        const branchMaxEstimado = Math.round(demandaMedia * 1.5); // 150% das vendas
 
         // Calcular necessidade de reposição
         const deficit = estoqueIdeal - branchStock;
 
-        // Se há deficit e CD tem estoque disponível
-        if (deficit > 0 && cdStock > 0) {
-          // Quantidade a redistribuir: MIN(deficit, estoque CD disponível)
-          const quantity = Math.min(deficit, cdStock);
+        // Gerar sugestão se há deficit significativo (mais de 10 unidades)
+        if (deficit > 10) {
+          // Quantidade a redistribuir: MIN(deficit, 50% do estoque CD)
+          const maxFromCD = Math.floor(cdStock * 0.5); // Não tirar mais que 50% do CD
+          const quantity = Math.min(deficit, maxFromCD);
 
-          // Determinar prioridade
-          let priority: "high" | "medium" = "medium";
-          if (branchStock < branchMinEstimado) {
-            priority = "high"; // Abaixo do mínimo
+          if (quantity > 0) {
+            // Determinar prioridade
+            let priority: "high" | "medium" = "medium";
+            if (branchStock < branchMinEstimado) {
+              priority = "high"; // Abaixo do mínimo crítico
+            }
+
+            redistributionSuggestions.push({
+              id: `${cdProduct.sku}_${cdProduct.local}_${branchProduct.local}`,
+              sku: cdProduct.sku,
+              produto: cdProduct.produto,
+              classe: cdProduct.classe,
+              familia: cdProduct.familia,
+              cor: cdProduct.cor,
+              tamanho: branchProduct.tamanho,
+              from: cdProduct.local,
+              cidadeOrigem: cdProduct.cidade,
+              to: branchProduct.local,
+              cidadeDestino: branchProduct.cidade,
+              quantity: Math.round(quantity),
+              fromStock: cdStock,
+              toStock: branchStock,
+              toMin: branchMinEstimado,
+              toMax: branchMaxEstimado,
+              priority,
+            });
           }
-
-          redistributionSuggestions.push({
-            id: `${cdProduct.sku}_${cdProduct.local}_${branchProduct.local}`,
-            sku: cdProduct.sku,
-            produto: cdProduct.produto,
-            classe: cdProduct.classe,
-            familia: cdProduct.familia,
-            cor: cdProduct.cor,
-            tamanho: branchProduct.tamanho,
-            from: cdProduct.local,
-            cidadeOrigem: cdProduct.cidade,
-            to: branchProduct.local,
-            cidadeDestino: branchProduct.cidade,
-            quantity: Math.round(quantity),
-            fromStock: cdStock,
-            toStock: branchStock,
-            toMin: branchMinEstimado,
-            toMax: branchMaxEstimado,
-            priority,
-          });
         }
       });
     });
 
+    // Ordenar por prioridade e quantidade
     return redistributionSuggestions.sort((a, b) => {
       if (a.priority === "high" && b.priority !== "high") return -1;
       if (a.priority !== "high" && b.priority === "high") return 1;

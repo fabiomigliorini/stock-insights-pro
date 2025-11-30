@@ -84,19 +84,20 @@ export const generateLocalData = (): MonthlySale[] => {
             } else {
               // Lojas recebem transferências para manter estoque em ~1 mês de venda
               const vendaMedia = qtdeVendida;
-              const estoqueIdeal = vendaMedia * 1.3; // 30% acima da venda
+              const estoqueIdeal = vendaMedia * 1.2; // 20% acima da venda
               const deficit = estoqueIdeal - estoqueAtual;
               
-              // Se estoque está abaixo do ideal, repõe próximo da venda mensal
-              if (deficit > 10) {
-                qtdeEntregue = Math.floor(vendaMedia * 0.8 + Math.random() * vendaMedia * 0.4); // 80-120% da venda
-              } 
-              // Pequena reposição se próximo do ideal
-              else if (deficit > 0) {
-                qtdeEntregue = Math.floor(Math.random() * 15) + 5; // 5-20
-              }
-              // Sem reposição se estoque acima do ideal
-              else {
+              // Criar variabilidade: algumas filiais recebem menos que o necessário
+              const receberReposicao = Math.random() > 0.3; // 70% das vezes recebe reposição
+              
+              if (receberReposicao && deficit > 10) {
+                // Repõe apenas 60-80% do deficit para manter necessidade de redistribuição
+                const percentualReposicao = 0.6 + Math.random() * 0.2;
+                qtdeEntregue = Math.floor(deficit * percentualReposicao);
+              } else if (deficit > 0) {
+                // Pequena reposição ocasional
+                qtdeEntregue = Math.floor(Math.random() * 10);
+              } else {
                 qtdeEntregue = 0;
               }
             }
