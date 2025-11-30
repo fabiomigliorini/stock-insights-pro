@@ -1,6 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { HistoricalExcelUpload } from "@/components/HistoricalExcelUpload";
-import { AutoImportButton } from "@/components/AutoImportButton";
 import { ClearDataButton } from "@/components/ClearDataButton";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
@@ -56,8 +55,6 @@ const Import = () => {
           </TabsList>
 
           <TabsContent value="upload" className="space-y-6">
-            <AutoImportButton />
-
             <HistoricalExcelUpload onDataImported={handleDataImported} />
 
             <Card className="p-6 bg-muted/50">
