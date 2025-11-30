@@ -146,6 +146,8 @@ export default function Classes() {
           selectedSize !== "todos" ? selectedSize : undefined
         );
         
+        console.log('[Classes] Dados mensais brutos:', data.map(d => ({ ano: d.ano, mes: d.mesNum, label: d.mes })));
+        
         // Filter by period using last N months
         const periodMap = {
           "inicio": 999,
@@ -156,6 +158,8 @@ export default function Classes() {
         } as const;
         const monthsToShow = periodMap[selectedPeriod];
         const filteredHistoricalData = data.slice(-monthsToShow);
+        
+        console.log('[Classes] Período selecionado:', selectedPeriod, 'total pontos:', data.length, 'exibindo últimos:', filteredHistoricalData.length, 'de', filteredHistoricalData[0]?.mes, 'até', filteredHistoricalData[filteredHistoricalData.length - 1]?.mes);
         
         // Map filtered historical data
         const chartData = filteredHistoricalData.map(d => ({
