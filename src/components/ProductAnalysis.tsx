@@ -95,7 +95,6 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
           estoque: d.estoque,
           min: d.min,
           max: d.max,
-          seguranca: d.seguranca,
         })));
       } catch (error) {
         console.error('Erro ao carregar dados mensais:', error);
@@ -276,7 +275,6 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                       <Line type="monotone" dataKey="estoque" stroke="hsl(var(--chart-5))" strokeWidth={2} name="Estoque" />
                       <Line type="monotone" dataKey="max" stroke="hsl(var(--chart-3))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Máx" />
                       <Line type="monotone" dataKey="min" stroke="hsl(var(--chart-2))" strokeWidth={2} strokeDasharray="5 5" name="Estoque Mín" />
-                      <Line type="monotone" dataKey="seguranca" stroke="hsl(var(--chart-4))" strokeWidth={2} strokeDasharray="3 3" name="Segurança" />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
@@ -375,10 +373,6 @@ export const ProductAnalysis = ({ product, allProducts, open, onOpenChange }: Pr
                 <div>
                   <p className="text-muted-foreground">Estoque Máximo</p>
                   <p className="font-medium">{product.estoqueMaxSugerido?.toFixed(0) || product.max?.toFixed(0) || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Estoque de Segurança</p>
-                  <p className="font-medium">{product.estoqueSeguranca?.toFixed(0) || '-'}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Ponto de Pedido</p>

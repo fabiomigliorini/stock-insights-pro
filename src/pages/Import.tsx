@@ -84,7 +84,6 @@ const Import = () => {
                 <div>• Quantidade Vendida</div>
                 <div>• Quantidade Reposição</div>
                 <div>• Estoque Mínimo/Máximo</div>
-                <div>• Estoque Segurança</div>
                 <div>• Ponto de Pedido</div>
               </div>
             </Card>

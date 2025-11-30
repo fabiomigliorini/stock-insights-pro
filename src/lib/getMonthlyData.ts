@@ -9,7 +9,6 @@ export interface MonthlyDataPoint {
   estoque: number;
   min: number;
   max: number;
-  seguranca: number;
   pontoPedido: number;
 }
 
@@ -57,7 +56,6 @@ export async function getMonthlyDataForSKU(
           estoque: 0,
           min: 0,
           max: 0,
-          seguranca: 0,
           pontoPedido: 0,
         };
       }
@@ -65,7 +63,6 @@ export async function getMonthlyDataForSKU(
       acc[key].estoque += row.estoque_final_mes || 0;
       acc[key].min += row.estoque_minimo_mes || 0;
       acc[key].max += row.estoque_maximo_mes || 0;
-      acc[key].seguranca += row.estoque_seguranca_mes || 0;
       acc[key].pontoPedido += row.ponto_pedido_mes || 0;
       return acc;
     }, {});
@@ -82,7 +79,6 @@ export async function getMonthlyDataForSKU(
         estoque: group.estoque,
         min: group.min,
         max: group.max,
-        seguranca: group.seguranca,
         pontoPedido: group.pontoPedido,
       }));
   } catch (error) {
@@ -144,7 +140,6 @@ export async function getMonthlyDataForClass(
           estoque: 0,
           min: 0,
           max: 0,
-          seguranca: 0,
           pontoPedido: 0,
           count: 0,
         };
@@ -153,7 +148,6 @@ export async function getMonthlyDataForClass(
       acc[key].estoque += row.estoque_final_mes || 0;
       acc[key].min += row.estoque_minimo_mes || 0;
       acc[key].max += row.estoque_maximo_mes || 0;
-      acc[key].seguranca += row.estoque_seguranca_mes || 0;
       acc[key].pontoPedido += row.ponto_pedido_mes || 0;
       acc[key].count += 1;
       return acc;
@@ -171,7 +165,6 @@ export async function getMonthlyDataForClass(
         estoque: group.estoque,
         min: group.min,
         max: group.max,
-        seguranca: group.seguranca,
         pontoPedido: group.pontoPedido,
       }));
 
